@@ -268,4 +268,312 @@ app.use(bodyParser.urlencoded({ extended: true }));
 - body-parser에는 정의해야 할 옵션이 있다. 우리 서버는 우리가 무엇을 전송하는지 알 수 있어야 한다.
 - json을 전송한다면 서버는 json을 이해해야 하고, 일반적인 html form을 전송한다면 서버는 urlencoded 라는 것을 이해해야 한다.
 
+## `2일차`
 ### #2.8 Express Core: Routing
+- 먼저 index.js를 app.js와 init.js로 분리한다.
+```javascript
+// app.js
+import express from "express";
+import morgan from "morgan";
+import helmet from "helmet";
+import cookieParser from "cookie-parser";
+import bodyParser from "body-parser";
+const app = express()
+
+const handleHome = (req, res) => res.send('Hello from home');
+
+const handleProfile = (req, res) => res.send('You are on my profile');
+
+app.use(cookieParser());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(helmet());
+app.use(morgan("dev"));
+
+app.get('/', handleHome);
+
+app.get('/profile', handleProfile);
+
+export default app;     // app object를 넘겨준다.
+
+// init.js
+import app from "./app";    // app 을 가져온다.
+
+const PORT = 4000;
+
+const handleListening = () => console.log(`Listening on: http://localhost:${PORT}`);
+
+app.listen(PORT, handleListening);
+```
+- router는 route들의 복잡함을 쪼개주는데 사용할 수 있다.
+```javascript
+// router.js
+import express from "express";
+
+export const userRouter = express.Router();     // default로 export한 것이 아니라 userRouter만 export 했다.
+
+userRouter.get("/", (req, res) => res.send("user index"));
+userRouter.get("/edit", (req, res) => res.send("user edit"));
+userRouter.get("/password", (req, res) => res.send("user password"));
+
+// app.js
+import { userRouter } from "./router";      // router.js의 userRouter를 불러온다.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~      // userRouter만 export했으므로 { } 를 사용한다.
+            __code skip__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+app.use('/user', userRouter);               // /user 에 접속하면 userRouter 를 사용한다.
+```
+- 위와 같이 원하는만큼 쉽게 router를 만들 수 있다.
+- express는 이렇게 모든 것을 작은 파일들로 쪼개서 사용할 수 있게 해준다.(이것이 매우 섹시한 점이다!)
+- express는 기본적으로 아주 간단하다. 무엇인가를 만들고 만들어진 것을 사용한다. 많은 것을 담고 있지 않다.
+- 하지만 router, middleware 등 그것들을 조합하면 꽤 커지게 된다.
+
+### #2.9 MVC Pattern part One
+- MVC: Model: 데이터 / View: 데이터의 모양 / Controller: 데이터를 찾는 함수
+- MVC는 패턴이다. 일종의 멋진 구조(structure)같은 것이다.
+- 이제 예시로 작성했던 router를 삭제하고 router를 URL별로 분리한다.
+```javascript
+// userRouter.js (router.js를 userRouter.js로 변경)
+import express from "express";
+
+const userRouter = express.Router();
+
+export default userRouter;
+
+// videoRouter.js
+import express from "express";
+
+const videoRouter = express.Router();
+
+export default videoRouter;
+
+// globalRouter.js
+import express from "express";
+
+const globalRouter = express.Router();
+
+export default globalRouter;
+
+// app.js
+import express from "express";
+import morgan from "morgan";
+import helmet from "helmet";
+import cookieParser from "cookie-parser";
+import bodyParser from "body-parser";
+import userRouter from "./routers/userRouter";
+import videoRouter from "./routers/videoRouter";
+import globalRouter from "./routers/globalRouter";
+const app = express()
+
+app.use(cookieParser());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(helmet());
+app.use(morgan("dev"));
+
+app.use('/', globalRouter);
+app.use('/users', userRouter);
+app.use('/videos', videoRouter);
+
+export default app;
+```
+- URL별로 분리하여 3개의 router를 사용한다.(userRouter, videoRouter, globalRouter)
+- 이 방법이 유일하게 독점적으로 URL를 다루는 방법이다. 이것은 나중에 우리가 볼 다른 함수들과는 아무 상관이 없는 것이다.
+
+### #2.10 MVC Pattern part Two
+- router의 URL을 하나의 파일에서 관리하기 위해 routes.js 파일을 생성한다.
+```javascript
+// routes.js
+// Global
+const HOME = "/";
+const JOIN = "/join";
+const LOGIN = "/login";
+const LOGOUT = "/logout";
+const SEARCH = "/search";
+
+// Users
+const USERS = "/users";
+const USER_DETAIL = "/:id";
+const EDIT_PROFILE = "/edit-profile";
+const CHANGE_PASSWORD = "/change-password";
+
+// Video
+const VIDEOS = "/videos";
+const UPLOAD = "/upload";
+const VIDEO_DETAIL = "/:id";        // express는 :id 의 형태의 URL을 보면 이 값이 변하는 값이라는 것을 안다.
+const EDIT_VIDEO = "/:id/edit";
+const DELETE_VIDEO = "/:id/delete";
+
+const routes = {
+    home: HOME,
+    join: JOIN,
+    login: LOGIN,
+    logout: LOGOUT,
+    search: SEARCH,
+    users: USERS,
+    userDetail: USER_DETAIL,
+    editProfile: EDIT_PROFILE,
+    changePassword: CHANGE_PASSWORD,
+    videos: VIDEOS,
+    upload: UPLOAD,
+    videoDetail: VIDEO_DETAIL,
+    editVideo: EDIT_VIDEO,
+    deleteVideo: DELETE_VIDEO
+};
+
+export default routes;
+```
+- 각각의 URL을 관련있는 router js파일에 작성하지 않는 이유는 나중에 다른 곳에서 사용하려고 할 때 그 구조를 외우고 있어야 하기 때문이다.
+- 그런 것보다는 하나의 URL 파일을 가지고 있으면 어디서든 하나의 파일로 모든 URL을 불러다 쓸 수 있다.
+
+```javascript
+// globalRouter.js
+import routes from "../routes";
+
+globalRouter.get(routes.home, (req, res) => res.send('Home'));
+globalRouter.get(routes.join, (req, res) => res.send('Join'));
+globalRouter.get(routes.login, (req, res) => res.send('Login'));
+globalRouter.get(routes.logout, (req, res) => res.send('Logout'));
+globalRouter.get(routes.search, (req, res) => res.send('Search'));
+```
+- 위와 같은 형태로 URL을 사용할 수 있다. 전체 URL 구조를 기억할 필요가 없는 것이다.
+
+### #2.11 MVC Pattern part Three
+- 이제 controller를 만들어보자.
+- 대게 프로젝트에 있는 각 모델마다 controller를 만들게 된다. 우리는 video와 user에 관한 것들만 있으므로 두 개의 controller를 만든다.
+```javascript
+// userController.js
+export const join = (req, res) => res.send("Join");
+export const login = (req, res) => res.send("Login");
+export const logout = (req, res) => res.send("Logout");
+export const users = (req, res) => res.send("Users");
+export const userDetail = (req, res) => res.send("User Detail");
+export const editProfile = (req, res) => res.send("Edit Profile");
+export const changePassword = (req, res) => res.send("Change Password");
+
+// videoController.js
+export const home = (req, res) => res.send("Home");
+export const search = (req, res) => res.send("Search");
+export const videos = (req, res) => res.send("Videos");
+export const upload = (req, res) => res.send("Upload");
+export const videoDetail = (req, res) => res.send("Video Detail");
+export const editVideo = (req, res) => res.send("Edit Video");
+export const deleteVideo = (req, res) => res.send("Delete Video");
+
+// globalRouter.js (userRouter.js와 videoRouter.js도 마찬가지로 변경)
+import { join, login, logout } from "../controllers/userController"
+import { home, search } from "../controllers/videoController";
+
+globalRouter.get(routes.home, home);    // get의 두번째 인자 함수를 controller로 변경했다.
+globalRouter.get(routes.search, search);
+globalRouter.get(routes.join, join);
+globalRouter.get(routes.login, login);
+globalRouter.get(routes.logout, logout);
+```
+- 위와 같이 get의 두번째 인자였던 함수를 controller로 변경했고, 코드가 훨씬 보기 좋아졌다.
+
+### #2.12 Recap
+- init.js에는 app.js에서 import한 app이 있다.
+- app 관련 코드들은 모두 app.js에 담겨 있다.
+- express를 import했고, express를 실행한 결과를 app 상수로 만들었다. 그리고 middleware들을 추가했다.
+- middlewares: cookieParser / bodyParser / helmet / morgan
+- 그리고 3개의 router를 사용했다.
+- router: globalRouter / userRouter / videoRouter
+- 이렇게 MVC 에서 C 부분을 작업했다.
+
+### #2.13 Installing Pug
+- Pug를 설치해보자.
+- Pug는 express에서 View를 다루는 방식 중 하나이다(view 엔진). HTML을 보여줄 수 있다.
+
+`npm install pug`
+- npm으로 Pug를 설치한다.
+
+```javascript
+// app.js
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            __code skip__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+const app = express()
+
+app.set("view engine", "pug");  // view engine을 pug로 설정한다.
+app.use(cookieParser());
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            __code skip__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
+- express에는 view engine에 대한 기본 설정값이 undefined이며, 이 설정값을 pug로 변경한다.
+- 그리고 view 파일들에 대한 기본 경로가 있으며, 작업 디렉토리 + '/views' 이다. views 폴더를 생성한다.
+
+```javascript
+export const home = (req, res) => res.render("home");
+```
+- views 폴더에는 view 파일들(템플릿)을 추가하고(템플릿의 확장자는 html이 아닌 pug 이다.), 이 템플릿을 웹 사이트에서 보여주기 위해서는 res.send 대신 res.render를 사용한다.
+
+### #2.14 Layout with Pug
+- pug 를 사용하면 HTML을 생성하게 하는 자바스크립트의 강력한 기능을 사용할 수 있다.
+- views 폴더 아래에 layouts 폴더를 만든다. 그리고 main.pug를 생성한다.
+
+```pug
+doctype html
+html
+    head
+        title Wetube
+    body
+        header
+            h1 WeTube
+        main
+            block contents       //- 이 부분에 템플릿 내용이 들어간다.
+        footer
+            span &copy; WeTube
+```
+- pug 는 < > 을 사용하지 않고 들여쓰기(탭 한칸 or 스페이스 4칸)를 사용하며, 들여쓰기는 children 태그를 의미한다.
+- main 에는 공통되는 코드들을 넣어준다. 그리고 실제 내용들(ex. home.pug 등)은 content라는 block에 들어가게 된다.
+```pug
+extends layouts/main
+
+block content
+    p Hello
+```
+- main 레이아웃을 사용하는 모든 템플릿에서 extends로 layouts/main 을 확장한다.
+- extends 는 레이아웃을 템플릿에서 확장하겠다는 뜻이다. 즉, main 코드를 사용하고, 거기에 추가적인 것을 더한다는 것이다.
+- 그리고 block content 밑에 추가적인 코드를 작성한다.
+
+### #2.15 Partials with Pug
+- Partials 는 페이지의 일부분이다. 조직적인 목적으로만 만들어진다.
+- partials 폴더를 생성하고 그 안에 footer.pug와 header.pug 파일을 생성한다.
+
+```pug
+//- footer.pug
+footer.footer
+    .footer__icon          //- class가 footer__icon인 div 태그
+        i.fab.fa-youtube   //- <i class="fab fa-youtube"></i> 와 동일 코드
+    span.footer__text WeTube #{new Date().getFullYear()} &copy;
+    //- 자바스크립트를 추가하고 싶다면 #{ add javascript code here }
+
+//- header.pug
+header.header               //- 두 개의 열을 추가한다.
+    .header__column         //- 첫 번째 열에는 아이콘을 추가한다.
+        i.fab.fa-youtube
+    .header__column         //- 두 번째 열에는 ul > (li > a)*2 추가한다.
+        ul
+            li
+                a(href="#") Join    //- 로그아웃 상태에서 보여지는 Join과 Log In
+            li
+                a(href="#") Log In  //- 나중에 로그인/아웃 상태에 따라 자동으로 바꿔서 표시할 것이다.
+
+//- main.pug
+doctype html
+html
+    head
+        link(rel="stylesheet", href="https://use.fontawesome.com/releases/v5.6.3/css/all.css", integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/", crossorigin="anonymous")
+        //- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous"> 와 동일 코드
+        title Wetube
+    body
+        include ../partials/header 
+        main
+            block content
+        include ../partials/footer  //- partial 을 사용하려면 include 태그를 사용한다.
+```
+- footer.pug와 header.pug 를 partial로 분리하고 분리된 partial을 main.pug에 include하여 사용했다.
+- 또한 main.pug 에는 footer에서 사용할 youtube 아이콘을 위해 fontawesome 무료 링크를 추가했다.
+- header.pug 에서 routes.js에 접근이 가능하면 좋을 것이다. **One single source of truth**(한 곳에서만 정보를 보관하는 것)은 더 나은 코드를 작성하게 만들어주는 원칙이다. 이런 방식으로 코드가 조직화된다면, 버그를 최소화 할 수 있다.
