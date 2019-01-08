@@ -522,7 +522,8 @@ html
         header
             h1 WeTube
         main
-            block contents       //- 이 부분에 템플릿 내용이 들어간다.
+            block contents       
+            //- 이 부분에 템플릿 내용이 들어간다.
         footer
             span &copy; WeTube
 ```
@@ -545,21 +546,28 @@ block content
 ```pug
 //- footer.pug
 footer.footer
-    .footer__icon          //- class가 footer__icon인 div 태그
-        i.fab.fa-youtube   //- <i class="fab fa-youtube"></i> 와 동일 코드
+    .footer__icon          
+        //- class가 footer__icon인 div 태그
+        i.fab.fa-youtube   
+        //- <i class="fab fa-youtube"></i> 와 동일 코드
     span.footer__text WeTube #{new Date().getFullYear()} &copy;
     //- 자바스크립트를 추가하고 싶다면 #{ add javascript code here }
 
 //- header.pug
-header.header               //- 두 개의 열을 추가한다.
-    .header__column         //- 첫 번째 열에는 아이콘을 추가한다.
+header.header               
+    //- 두 개의 열을 추가한다.
+    .header__column         
+        //- 첫 번째 열에는 아이콘을 추가한다.
         i.fab.fa-youtube
-    .header__column         //- 두 번째 열에는 ul > (li > a)*2 추가한다.
+    .header__column         
+        //- 두 번째 열에는 ul 과 li, a를 추가한다.
         ul
             li
-                a(href="#") Join    //- 로그아웃 상태에서 보여지는 Join과 Log In
+                a(href="#") Join    
+                //- 로그아웃 상태에서 보여지는 Join과 Log In
             li
-                a(href="#") Log In  //- 나중에 로그인/아웃 상태에 따라 자동으로 바꿔서 표시할 것이다.
+                a(href="#") Log In  
+                //- 나중에 로그인/아웃 상태에 따라 자동으로 바꿔서 표시할 것이다.
 
 //- main.pug
 doctype html
@@ -570,9 +578,10 @@ html
         title Wetube
     body
         include ../partials/header 
+        //- partial 을 사용하려면 include 태그를 사용한다.
         main
             block content
-        include ../partials/footer  //- partial 을 사용하려면 include 태그를 사용한다.
+        include ../partials/footer  
 ```
 - footer.pug와 header.pug 를 partial로 분리하고 분리된 partial을 main.pug에 include하여 사용했다.
 - 또한 main.pug 에는 footer에서 사용할 youtube 아이콘을 위해 fontawesome 무료 링크를 추가했다.
