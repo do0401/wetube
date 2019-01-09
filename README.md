@@ -305,7 +305,7 @@ const handleListening = () => console.log(`Listening on: http://localhost:${PORT
 
 app.listen(PORT, handleListening);
 ```
-- router는 route들의 복잡함을 쪼개주는데 사용할 수 있다.
+- routing 모듈화는 router들의 복잡함을 쪼개주는데 사용할 수 있다.
 ```javascript
 // router.js
 import express from "express";
