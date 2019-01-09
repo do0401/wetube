@@ -586,3 +586,174 @@ html
 - footer.pug와 header.pug 를 partial로 분리하고 분리된 partial을 main.pug에 include하여 사용했다.
 - 또한 main.pug 에는 footer에서 사용할 youtube 아이콘을 위해 fontawesome 무료 링크를 추가했다.
 - header.pug 에서 routes.js에 접근이 가능하면 좋을 것이다. **One single source of truth**(한 곳에서만 정보를 보관하는 것)은 더 나은 코드를 작성하게 만들어주는 원칙이다. 이런 방식으로 코드가 조직화된다면, 버그를 최소화 할 수 있다.
+
+## `3일차`
+### #2.16 Local Variables in Pug
+- 이제 템플릿에 정보를 추가한다. controller에 있는 정보를 템플릿에 추가할 것이다.
+- 먼저 전체 템플릿에서 사용할 정보를 controller에서 가져오기 위해 미들웨어를 추가한다.
+
+```javascript
+// app.js
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            __code skip__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+import { localMiddleware } from "./middlewares";
+
+app.use(helmet());
+app.set("view engine", "pug");
+app.use(cookieParser());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(morgan("dev"));
+
+app.use(localMiddleware);           // localMiddleware 함수 사용
+
+app.use(routes.home, globalRouter);
+app.use(routes.users, userRouter);
+app.use(routes.videos, videoRouter);
+
+export default app;
+
+// middlewares.js
+import routes from "./routes";
+
+export const localMiddleware = (req, res, next) => {
+    res.locals.siteName = "WeTube";     // siteName
+    res.locals.routes = routes;         // routes
+    next();         // 이 미들웨어는 코드 사이에 들어가 있으므로 next를 호출해야 한다.
+}
+```
+```pug
+//- main.pug
+title #{siteName}   
+//- WeTube를 #{siteName}으로 변경
+
+//- header.pug
+header.header
+    .header__colum
+        a(href=routes.home)
+            //- 링크 추가
+            i.fab.fa-youtube
+    .header__column
+        ul
+            li
+                a(href=routes.join) Join
+                //- routes.join 추가
+            li
+                a(href=routes.login) Log In
+                //- routes.login 추가
+
+//- footer.pug
+span.footer__text   #{siteName} #{new Date().getFullYear()} &copy;
+//- WeTube를 #{siteName}으로 변경
+```
+- middlewares.js 라는 파일을 생성하고 locals를 추가한다.
+- 추가한 locals는 위 main.pug, header.pug, footer.pug에서와 같이 사용한다.
+- 즉, locals는 locals로 추가한 local 변수를 global 변수로 사용할 수 있게 해준다. 모든 템플릿에서 사용할 수 있다
+
+### #2.17 Template Variables in Pug
+- 템플릿마다 다른 정보를 가질 경우, 각각의 템플릿에 변수를 추가하는 방법은 아래와 같다.
+
+```javascript
+// videoController.js
+export const home = (req, res) => res.render("home", { pageTitle: "Home" });
+export const search = (req, res) => res.render("Search", { pageTitle: "Search" });
+export const videos = (req, res) => res.render("Videos", { pageTitle: "Video" });
+export const upload = (req, res) => res.render("Upload", { pageTitle: "Upload" });
+export const videoDetail = (req, res) => res.render("Video Detail", { pageTitle: "Video Detail" });
+export const editVideo = (req, res) => res.render("Edit Video", { pageTitle: "Edit Video" });
+export const deleteVideo = (req, res) => res.render("Delete Video", { pageTitle: "Delete Video" });
+
+// main.pug
+title #{pageTitle} | #{siteName}
+```
+- render 함수의 첫번째 인자는 페이지에 보여줄 템플릿이고, 두번째 인자는 템플릿에 추가할 정보가 담긴 객체다.
+- 위 videoController.js 와 같이 각각의 템플릿마다 pageTitle을 다르게 지정하면 페이지마다 페이지에 맞는 타이틀이 보여지게 된다.
+- videoController.js 와 마찬가지로 userController.js 에도 pageTitle을 추가한다.
+
+### #2.18 Search Controller
+- search 템플릿에 약간의 로직을 추가할 것이다.
+```pug
+//- header.pug - 컬럼 추가(input form 추가)
+.header__column
+    form(action=routes.search method='get')
+        //- action을 지정해서 search 페이지로 이동하도록 한다. method는 'get'으로 지정해야 url에 정보를 추가해준다.
+        input(type='text', placeholder='Search by term...', name='term')
+        //- name을 term으로 주면 검색어를 입력 시 검색어 내용이 term에 저장된다. 
+
+//- search.pug - content 내용 변경
+block content
+    .search__header
+        h3 Searching for: #{searchingBy}
+```
+- 먼저 header.pug에 컬럼을 추가하고 input form을 추가한다.
+- 그리고 search.pug에 search__header 라는 class를 가진 div를 생성하고 h3 태그를 추가한다. searchingBy 변수는 아직 지정하지 않아서 보이지 않는다.
+```javascript
+// videoController.js
+export const search = (req, res) => {
+    console.log(req.query);
+    res.render("search", { pageTitle: "Search", searchingBy });
+};
+```
+- 검색어가 어디에 들어있는지 확인하기 위해 videoController.js 의 search 함수 안에서 console.log(req.query)를 확인한다. 터미널 창에서 { term: 'food' } 를 확인할 수 있다.
+```javascript
+export const search = (req, res) => {
+    const {query: { term: searchingBy }} = req;
+    // 위는 ES6 구문이고, const searchingBy = req.query.term; 와 같다.
+
+    res.render("search", { pageTitle: "Search", searchingBy });
+    // 위 searchingBy 는 ES6 구문이고, searchingBy: searchingBy; 와 같다.
+};
+```
+- req.query.term에 검색어가 저장되는 것을 알았으므로, searchingBy 변수에 해당 검색어를 넣는다.
+- 그리고 render 함수 두번째 인자에 변수를 추가한다.
+
+### #2.19 Join: Log in HTML
+- 만들어야 할 페이지들을 정리해보자.
+- Home / Join / Login / **Search** / User Detial / Edit Profile / Change Password / Upload / Video Detail / Edit Video
+
+```pug
+//- home.pug
+block content
+    .videos
+        h1 Video
+```
+- home.pug는 나중에 다시 수정할 것이다. 일단 이것으로 완료한다.
+
+```pug
+//- login.pug
+.form__container
+    form(action='/login', method='post')
+        input(type='email', name='email', placeholder='Email')
+        input(type='password', name='password', placeholder='Password')
+        input(type='submit', value='Log In')
+
+//- join.pug
+.form__container
+    form(action='/login', method='post')
+        input(type='text', name='name', placeholder='Full Name')
+        input(type='email', name='email', placeholder='Email')
+        input(type='password', name='password', placeholder='Password')
+        input(type='password', name='password2', placeholder='Verify Password')
+        input(type='submit', value='Join Now')
+```
+- login과 join 페이지에는 각 페이지에 필요한 form을 추가했다.
+- 이제 button을 만들고 싶은 만큼 만들기 위해 partial을 만들 것이다. socialLogin.pug 파일을 생성한다.
+- github 계정 로그인 버튼과 페이스북 계정 로그인 버튼을 위한 것이다. 그리고 이 버튼을 join과 login 화면에서 모두 띄울 것이다.
+
+```pug
+//- socialLogin.pug
+.social-login
+    button
+        span.social-login--github
+            i.fab.fa-github
+        |Continue with Github
+        //- 앞에 '|'를 붙이면 뒤에 글자를 텍스트로 인식한다.
+    button.social-login--facebook
+        span
+            i.fab.fa-facebook
+        |Continue with Facebook
+
+//- login.pug, join.pug - 마지막에 socialLogin을 include 한다.
+include partials/socialLogin
+```
