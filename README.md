@@ -133,7 +133,7 @@ function handleProfile(req, res){
 
 app.get('/', handleHome);           // root(/)에 접근하면 handleHome에 get request 발생(이것이 route)
 
-app.get('/profile', handleProfile); // /profile에 접근하면 handleHome에 get request 발생(이것이 route)
+app.get('/profile', handleProfile); // /profile에 접근하면 handleProfile에 get request 발생(이것이 route)
 ```
 - 위에서 서버가 웹 사이트 서버처럼 작동하길 바란다면 메시지 대신 html, css 파일을 send 해줘야 한다.
 
@@ -141,7 +141,7 @@ app.get('/profile', handleProfile); // /profile에 접근하면 handleHome에 ge
 - Babel은 최신의 자바스크립트 코드를 무난한 예전의 자바스크립트 코드로 변환해준다.
 
 `npm install @babel/node`<br>
-`npm install @babel/preset-env`
+`npm install @babel/preset-env`<br>
 `npm install @babel/core`
 - babel/node를 설치하고 -env 프리셋과 babel/core를 설치한다.
 
