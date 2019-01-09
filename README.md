@@ -508,6 +508,7 @@ app.use(cookieParser());
 export const home = (req, res) => res.render("home");
 ```
 - views 폴더에는 view 파일들(템플릿)을 추가하고(템플릿의 확장자는 html이 아닌 pug 이다.), 이 템플릿을 웹 사이트에서 보여주기 위해서는 res.send 대신 res.render를 사용한다.
+- render 함수의 첫번째 인자로, 보여주고자 하는 pug 파일 이름을 입력해준다.
 
 ### #2.14 Layout with Pug
 - pug 를 사용하면 HTML을 생성하게 하는 자바스크립트의 강력한 기능을 사용할 수 있다.
@@ -522,7 +523,7 @@ html
         header
             h1 WeTube
         main
-            block contents       
+            block content       
             //- 이 부분에 템플릿 내용이 들어간다.
         footer
             span &copy; WeTube
