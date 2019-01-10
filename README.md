@@ -659,7 +659,6 @@ span.footer__text   #{siteName} #{new Date().getFullYear()} &copy;
 // videoController.js
 export const home = (req, res) => res.render("home", { pageTitle: "Home" });
 export const search = (req, res) => res.render("Search", { pageTitle: "Search" });
-export const videos = (req, res) => res.render("Videos", { pageTitle: "Video" });
 export const upload = (req, res) => res.render("Upload", { pageTitle: "Upload" });
 export const videoDetail = (req, res) => res.render("Video Detail", { pageTitle: "Video Detail" });
 export const editVideo = (req, res) => res.render("Edit Video", { pageTitle: "Edit Video" });
@@ -724,14 +723,14 @@ block content
 ```pug
 //- login.pug
 .form__container
-    form(action='/login', method='post')
+    form(action=routes.login, method='post')
         input(type='email', name='email', placeholder='Email')
         input(type='password', name='password', placeholder='Password')
         input(type='submit', value='Log In')
 
 //- join.pug
 .form__container
-    form(action='/login', method='post')
+    form(action=routes.join, method='post')
         input(type='text', name='name', placeholder='Full Name')
         input(type='email', name='email', placeholder='Email')
         input(type='password', name='password', placeholder='Password')
@@ -758,3 +757,169 @@ block content
 //- login.pug, join.pug - 마지막에 socialLogin을 include 한다.
 include partials/socialLogin
 ```
+- login.pug와 join.pug에 socialLogin.pug를 include하여 버튼을 추가한다.
+
+## `4일차`
+### #2.20 Change Profile HTML
+- Home / **Join** / **Login** / **Search** / User Detial / Edit Profile / Change Password / Upload / Video Detail / Edit Video
+- editProfile 파일을 작업한다.
+
+```pug
+.form-container
+    form(action=routes.editProfile, method='post')
+        label(for='avatar') Avatar
+        input(type='file', id='avatar', name='avatar')
+        input(type='text', placeholder='Name', name='name')
+        input(type='email', placeholder='Email', name='email')
+        input(type='submit', value='Update Profile')
+    a.form-container__link(href=routes.changePassword) Change Password
+```
+- editProfile에 맞는 form을 추가한다.
+- changePassword, upload, editVideo 파일도 작업한다.
+```pug
+//- changePassword.pug
+.form-container
+    form(action=`/users${routes.changePassword}`, method="post")
+        input(type="password", name="oldPasswod", placeholder="Current Password")
+        input(type="password", name="newPassword", placeholder="New Password")
+        input(type="password", name="newPassword1", placeholder="Verify New Password")
+        input(type="submit", value="Change Password")
+
+//- upload.pug
+.form-container
+    form(action=`/videos${routes.upload}`, method="post")
+        label(for="file") Video File
+        input(type="file", id="file", name="file")
+        input(type="text", placeholder="Title", name="title")
+        textarea(name="description", placeholder="Description")
+        input(type="submit", value="Upload Video")
+
+//- editVideo.pug
+.form-container
+    form(action=`/videos${routes.editVideo}`, method="post")
+        input(type="text", placeholder="Title", name="title")
+        textarea(name="description", placeholder="Description")
+        input(type="submit", value="Update Video")
+    a.form-container__link.form-container__link--delete(href=`/videos${routes.deleteVideo}`) Delete Video
+```
+- 각각의 파일에 맞는 form을 추가한다.
+
+### #2.21 Home Controller
+- 이제 전체 애플리케이션의 흐름을 가짜로 만들기 위해 가짜 정보를 넣어서 템플릿을 완성할 것이다.
+- db.js를 생성하고 아래와 같이 가짜 데이터를 입력한다.
+```javascript
+// db.js
+export const videos = [
+    {
+        id: 324393,
+        title: "Video awesome",
+        description: "This is something I love",
+        views: 24,
+        videoFile: "https://archive.org/details/BigBuckBunny_124",
+        creator: {
+            id: 121212,
+            name: "Nicolas",
+            email: "nico@las.com"
+        }
+    },
+    {
+        id: 1212121,
+        title: "Video super",
+        description: "This is something I love",
+        views: 24,
+        videoFile: "https://archive.org/details/BigBuckBunny_124",
+        creator: {
+            id: 121212,
+            name: "Nicolas",
+            email: "nico@las.com"
+        }
+    },
+    {
+        id: 55555,
+        title: "Video nice",
+        description: "This is something I love",
+        views: 24,
+        videoFile: "https://archive.org/details/BigBuckBunny_124",
+        creator: {
+            id: 121212,
+            name: "Nicolas",
+            email: "nico@las.com"
+        }
+    },
+    {
+        id: 11111,
+        title: "Video perfect",
+        description: "This is something I love",
+        views: 24,
+        videoFile: "https://archive.org/details/BigBuckBunny_124",
+        creator: {
+            id: 121212,
+            name: "Nicolas",
+            email: "nico@las.com"
+        }
+    }
+];
+
+// videoController.js
+import { videos } from "../db";
+
+export const home = (req, res) => {
+    res.render("home", { pageTitle: "Home", videos });
+}
+```
+- db.js에 데이터를 입력하고 videoController.js에서 import 후 home 함수에서 videos를 두번째 인자로 사용한다.
+- controller에서 home 화면에 videos 배열을 전달한 것이다.
+```pug
+//- home.pug
+.videos
+    each item in videos         // controller에서 전달한 videos 배열 내에서 하나씩 iteration을 적용시킨다.
+        h1= item.title          // videos 내 각각의 객체에 있는 title 속성값을 h1 태그로 출력한다.
+        p= item.description     // videos 내 각각의 객체에 있는 description 속성값을 p 태그로 출력한다.
+```
+- home.pug 파일에서 each in 구문으로 videos 배열에서 item을 iteration 하면서 각각의 값을 하나씩 가져와서 출력한다.
+- 이제 home 화면에서 가짜 비디오 데이터의 title과 description을 확인할 수 있다.
+
+### #2.22 Home controller part Two
+- footer를 include해서 재활용한 것처럼 video block html 코드를 만들어서 재활용할 것이다.
+- mixin을 이용한다. mixin은 웹 사이트에서 자주 반복되는 html 코드를 담고 있다.
+- mixin은 pug 가 가지고 있는 함수 중 하나이다. 기존 home.pug 내용을 mixin으로 바꾼다면 다음과 같다.
+
+```pug
+//- mixins/videoBlock.pug
+mixin videoBlock(video = {})    
+    //- mixin 함수는 하나의 인자를 가진다. videoBlock mixin에 인자가 입력되면, 그 객체의 이름을 video로 정한 것이다. video는 기본적으로 빈 객체이다.
+    h1=video.title
+    p=video.description
+
+//- home.pug
+include mixins/videoBlock
+//- videoBlock을 include한다.
+
+.videos
+    each item in videos
+        +videoBlock({                       // mixin을 사용할 때는 이런 방식으로 사용한다.
+            title: item.title,              // mixin에서 정의한 video.title에 item.title 값을 넣는다.
+            description: item.description   // mixin에서 정의한 video.description에 item.description 값을 넣는다.
+        })
+```
+- 위와 같은 방법으로 mixin을 사용할 수 있다.
+- 이제 실제 우리 웹 사이트에서 사용될 video 정보를 출력해주는 mixin 코드를 작성해보자.
+
+```pug
+//- videoBlock.pug
+mixin videoBlock(video = {})
+    .videoBlock
+        video.videoBlock__thumbnail(src=video.videoFile, controls=true)
+        h4.videoBlock__title=video.title
+        h6.videoBlock__views=video.views
+
+//- home.pug
+.videos
+    each item in videos
+        +videoBlock({
+            title: item.title,
+            views: item.views,
+            videoFile: item.videoFile
+        })
+```
+- mixin에 video thumbnail과 title, views를 추가했고, home에서 mixin을 사용하여 데이터를 출력했다.
