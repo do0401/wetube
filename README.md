@@ -923,3 +923,318 @@ mixin videoBlock(video = {})
         })
 ```
 - mixin에 video thumbnail과 title, views를 추가했고, home에서 mixin을 사용하여 데이터를 출력했다.
+
+## `5일차`
+### #2.23 Join Controller
+- search 화면을 작업해보자. 아직 비디오 검색 기능은 구현하지 않는다.
+```javascript
+// videoController.js
+export const search = (req, res) => {
+    const {query: { term: searchingBy }} = req;
+    // const searchingBy = req.query.term;
+
+    res.render("search", { pageTitle: "Search", searchingBy, videos }); // videos 가짜 데이터를 전달한다.
+};
+```
+- 먼저 videoController에서 search 함수의 render함수에서 videos 데이터를 전달한다.
+```pug
+.search__header
+    h3 Searching for: #{searchingBy}
+.search__videos
+    each item in videos
+        +videoBlock({
+            title: item.title,
+            views: item.views,
+            videoFile: item.videoFile
+        })
+```
+- 그리고 home에서 추가했던 mixin을 똑같이 추가하여 search 화면에서도 video 리스트가 보이도록 한다.
+- 이번에는 Join 화면을 바꿔보자. 회원가입을 하면 자동으로 Login이 되고 Home 화면으로 이동하도록 바꿔볼 것이다.
+- 지금까지 작성한 코드로 페이지에서 join을 하면 /join으로 post할 수 없다는 에러를 볼 것이다. /join 경로로 post하기 위한 설정이나 코드가 없기 때문이다.
+
+```javascript
+// userController.js
+export const getJoin = (req, res) => {
+    res.render("join", { pageTitle: "Join" });
+};
+
+export const postJoin = (req, res) => {
+    console.log(req.body);          // bodyParser의 필요성을 알아보기 위해 req.body를 찍어준다.
+    res.render("join", { pageTitle: "Join" });
+}
+
+// globalRouter.js
+import { getJoin, postJoin, login, logout } from "../controllers/userController"
+
+globalRouter.get(routes.join, getJoin);
+globalRouter.post(routes.join, postJoin);
+```
+- 먼저 기존 join controller를 getJoin과 postJoin으로 나누고, globalRouter 내용도 수정한다.
+- postJoin은 method가 post인 /join 경로에서만 작동할 것이다.
+- 코드 변경 후 페이지에서 join을 하면 이번에는 에러가 발생하지 않는다.
+```javascript
+{ name: 'kdh',
+  email: 'abc@abc.com',
+  password: '111',
+  password2: '111' }    // req.body의 내용을 확인할 수 있다. bodyParser가 없다면 이 내용을 알 수 없다.
+```
+- 터미널에서 req.body 내용을 확인해보자. form에서 전송한 데이터를 받고 있다. 만약 app.js에서 bodyParser를 삭제하고 req.body를 확인하면 undefined로 표시되는 것을 알 수 있다. 이것이 bodyParser를 사용하는 이유이다.
+- 사용자가 입력한 정보를 req.body에서 가져와야 한다.
+```javascript
+// userController.js
+import routes from "../routes";         // routes를 import 한다.
+
+export const postJoin = (req, res) => {
+    const {
+        body: { name, email, password, password2 }
+    } = req;
+    if(password !== password2) {
+        res.status(400);
+        res.render("join", { pageTitle: "Join"});
+    } else {
+        // To Do: Register User
+        // To Do: Log user in
+        res.redirect(routes.home);
+    }
+    res.render("join", { pageTitle: "Join" });
+}
+```
+- req.body 에서 사용자가 입력한 정보를 가져왔다.
+- 그리고 password와 password2가 다르다면 400 상태코드를 전달하고, join 페이지를 다시 render해준다.
+- password와 password2가 같다면 home으로 redirection 한다.
+- 페이지에 에러를 전달하는 것은 좋은 일이다. 페이지는 에러를 이해하고 그에 맞는 응답을 한다.
+
+### #2.24 Log In and User Profile Controller
+- login 도 join과 비슷하다.
+```javascript
+// userController.js
+export const getLogin = (req, res) => res.render("login", { pageTitle: "Login" });
+export const postLogin = (req, res) => {
+    res.redirect(routes.home);
+};
+
+// globalRouter.js
+globalRouter.get(routes.login, getLogin);
+globalRouter.post(routes.login, postLogin);
+```
+- 나중에 사용자 비밀번호가 데이터베이스에 있는 것과 같은지 검사해야 한다. 지금은 redirection만 한다.
+- 이번에는 사용자가 로그인 상태인지 아닌지를 체크하여 header 메뉴를 보여주도록 하자.
+```javascript
+// middlewares.js
+export const localMiddleware = (req, res, next) => {
+    res.locals.siteName = "WeTube";
+    res.locals.routes = routes;
+    res.locals.user = {             // 가짜 user 정보를 입력한다.
+        isAuthenticated: true,
+        id: 1
+    }
+    next();
+}
+```
+- middlewares에 가짜 user 정보 객체를 입력한다. 즉, 현재 페이지에 id가 1인 user가 로그인한 상태가 된다.
+- 이 정보는 실제 사용자 정보가 있으면 대체될 코드이다.
+
+```pug
+//- header.pug
+.header__column
+    ul
+        if !user.isAuthenticated            // user.isAuthenticated 가 false 이면 join과 login이 보인다.
+            li
+                a(href=routes.join) Join
+            li
+                a(href=routes.login) Log In
+        else                                // user.isAuthenticated가 true 이면 upload, profile, logout이 보인다.
+            li
+                a(href=routes.upload) Upload
+            li
+                a(href=routes.userDetail) Profile
+            li
+                a(href=routes.logout) Log Out
+```
+- header.pug 에서 user 로그인 상태에 따라 메뉴가 다르게 보이도록 분기를 나눴다.
+- 이제 페이지를 열어보면 upload, profile, logout 메뉴가 보일 것이다.
+- 그런데 profile 버튼을 누르면 url에 'http://localhost:4000/:id' 라고 표시가 된다. /:id 가 아니라 /1 로 표시되도록 수정해보자.
+
+```javascript
+// routes.js
+const routes = {
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            __code skip__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    userDetail: id => {             // userDetail을 함수로 변경한다. id 인자를 받아서 url에 표시한다.
+        if (id) {
+            return `/users/${id}`;
+        } else {
+            return USER_DETAIL;
+        }
+    },
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            __code skip__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// userRouter.js
+userRouter.get(routes.userDetail(), userDetail);    // userDetail을 함수로 변경한다.
+
+// header.pug
+a(href=routes.userDetail(user.id)) Profile          // userDetail을 user.id를 받는 함수로 변경한다.
+```
+- routes.js 에 userDetail 을 함수로 변경하여, id 값을 받아서 url에 전달하도록 변경한다.
+- 함수로 선언만 하면 안되고, userRouter와 header에서 userDetail을 함수로 변경하여 실행해야 한다.
+
+```javascript
+// routes.js
+videoDetail: id => {
+    if (id) {
+        return `/videos/${id}`;
+    } else {
+        return VIDEO_DETAIL;
+    }
+},
+
+// videoRouter.js
+videoRouter.get(routes.videoDetail(), videoDetail);
+```
+- videoDetail도 userDetail과 마찬가지로 변경해준다.
+
+### #2.25 More Controllers
+- video 목록을 클릭하면 video 상세 페이지로 보이도록 mixin을 수정한다.
+
+```pug
+//- videoBlock.pug
+.videoBlock
+    a(href=routes.videoDetail(video.id))
+        video.videoBlock__thumbnail(src=video.videoFile, controls=true)
+        h4.videoBlock__title=video.title
+        h6.videoBlock__views=video.views
+
+//- home.pug
+.videos
+    each item in videos
+        +videoBlock({
+            id: item.id,
+            title: item.title,
+            views: item.views,
+            videoFile: item.videoFile
+        })
+```
+- videoBlock.pug 에 a 태그를 추가한다. video를 클릭하면 videoDetail 페이지로 이동한다.
+- home.pug 에서 id를 전달하도록 코드를 추가한다.
+- 현재 logout을 누르면 logout 페이지로 이동한다. 이것을 home으로 redirection 되도록 수정한다.
+
+```javascript
+// userController.js
+export const logout = (req, res) => {
+    // To Do: Process Log Out
+    res.redirect(routes.home);
+};
+```
+- userController 에서 redirect 코드를 추가하고 주석을 달았다. 그리고 logout.pug 파일은 삭제한다.
+- upload 를 클릭하면 에러 메시지(Cannot GET /upload)를 볼 수 있다. '/videos/upload' 가 아닌 '/upload' 로 이동하고 있기 때문이다.
+
+```pug
+//- header.pug
+a(href=`/videos${routes.upload}`) Upload
+```
+- 경로를 위와 같이 수정한다.
+- upload 화면도 join, login과 마찬가지로 upload 요청에 응답할 수 있어야 한다.
+- getUpload와 postUpload로 분리해야 한다.
+```javascript
+// videoController.js
+export const getUpload = (req, res) => res.render("upload", { pageTitle: "Upload" });
+export const postUpload = (req, res) => {
+    const {
+        body: { file, title, description }
+    }= req;
+    // To Do: Upload and save video
+    res.redirect(routes.videoDetail(324393));
+};
+
+// videoRouter.js
+import { getUpload, postUpload, videoDetail, editVideo, deleteVideo } from "../controllers/videoController";
+
+videoRouter.get(routes.upload, getUpload);
+videoRouter.post(routes.upload, postUpload);
+```
+- videoController 에서 getUpload와 postUpload를 분리하고, postUpload에서는 요청하는 정보를 가져온다. 그리고 videoDetail 페이지로 redirection 된다. 위에서 사용한 id(324393)는 가짜 데이터이다.
+- videoRouter 에서도 get과 post를 분리한다.
+
+```pug
+//- upload.pug
+input(type="file", id="file", name="file", required=true)
+input(type="text", placeholder="Title", name="title", required=true)
+textarea(placeholder="Description", name="description", required=true)
+
+//- join.pug
+input(type='text', name='name', placeholder='Full Name', required=true)
+input(type='email', name='email', placeholder='Email', required=true)
+input(type='password', name='password', placeholder='Password', required=true)
+input(type='password', name='password2', placeholder='Verify Password', required=true)
+
+//- login.pug
+input(type='email', name='email', placeholder='Email', required=true)
+input(type='password', name='password', placeholder='Password', required=true)
+```
+- 마지막으로 upload, join, login 에 required=true 를 추가한다.
+
+## #3 MongoDB
+### #3.0 MongoDB and Mongoose
+- Database는 SQL과 NoSQL로 나뉘며, MongoDB는 NoSQL로 분류된다.
+- MongoDB는 더 적은 규칙과 더 적은 절차로 작업이 가능한 Database이다.
+- MongoDB Community Server 다운로드 후 설치한다.
+- windowOS의 경우, 환경변수에 MongoDB bin 경로를 추가한다.
+
+`mongod`
+- 터미널에서 mongod 를 입력하여 정상적으로 설치되었는지 확인한다.
+
+`mongo`
+- mongo 를 입력하면 mongo 로 들어갈 수 있다.
+
+- 이제 mongo를 javascript와 연결해야 한다.
+- MongoDB는 C++이나 다른 언어로 만들어졌으므로, javascript를 MongoDB와 연결하려면 Adapter가 필요하다.
+- 그리고 그것은 mongoosejs가 해줄 것이다.
+- mongoosejs는 NodeJS를 위한 MongoDB Object Modeling 이다.
+
+`npm install mongoose`
+- mongoosejs를 설치한다.
+
+### #3.1 Connecting to MongoDB
+- database 관련 작업을 해보자.
+
+`npm install dotenv`
+- 먼저 'dotenv' 라는 것을 설치한다.
+- dotenv 를 설치하는 이유는 가끔 어떤 부분을 숨겨놓고 싶을 수 있기 때문이다. dotenv 의 사용 예시는 다음에 설명하도록 한다.
+- 이전에 만들었던 db.js의 가짜 데이터를 삭제한다.
+```js
+import mongoose from "mongoose";        // mongoose 를 import 한다.
+
+mongoose.connect(
+    "mongodb://localhost:27017/we-tube", 
+    // database 가 어디에 저장되어있는지 알려준다. 
+    // port는 터미널에 mongod 입력하면 확인할 수 있다. database 이름은 we-tube 로 정했다.
+    {
+        useNewUrlParser: true,
+        useFindAndModify: false
+    }
+    // 새로운 버전의 mongoose는 connect 함수 두번째 인자로 configuration을 보낼 수 있다.
+    // 위 설정은 mongoose 지원 중단 경고 관련 옵션으로 자세한 내용은 
+    // [Deprecation Warnings](https://mongoosejs.com/docs/deprecations.html) 참조하세요.
+);
+
+const db = mongoose.connection;     // MongoDB 와의 연결을 db 로 저장한다.
+
+const handleOpen = () => console.log(`✅ Connected to DB`);
+const handleError = error => console.log(`❌ Error on DB Connection:${error}`);
+
+db.once("open", handleOpen);    // once 는 한번만 실행되며, 여기서는 db에 처음 연결 시 handleOpen 함수를 실행한다.
+db.on("error", handleError);    // error 발생 시 handleError 함수를 실행한다.
+```
+- db.js에 mongodb에 연결하기 위한 mongoose 코드를 추가했다.
+
+```js
+// videoController.js
+import { videos } from "../db";     // videoController에 import 되어있는 db를 삭제한다.
+
+// init.js
+import "./db";      // init.js에 db를 추가한다.
+```
+- 사용하지 않는 videoController의 db를 삭제하고 init에 import 한다.
