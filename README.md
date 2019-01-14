@@ -1,6 +1,6 @@
 Youtube Clone Coding
 =========================
-이 글은 이 프로젝트는 [Nomad Coders](https://academy.nomadcoders.co/)의 니콜라스님 강의를 토대로 진행했습니다.
+이 프로젝트는 [Nomad Coders](https://academy.nomadcoders.co/)의 니콜라스님 강의를 토대로 진행했습니다.
 
 ## `시작하기`
 ### #0.2 The State of Fullstack
@@ -1238,3 +1238,177 @@ import { videos } from "../db";     // videoController에 import 되어있는 db
 import "./db";      // init.js에 db를 추가한다.
 ```
 - 사용하지 않는 videoController의 db를 삭제하고 init에 import 한다.
+
+## `6일차`
+### #3.2 Configuring DotEnv
+- dotenv를 구성하기 위해 먼저 .env 파일을 생성한다.
+
+```js
+MONGO_URL="mongodb://localhost:27017/we-tube"
+PORT=4000
+```
+- .env 파일에 숨기고 싶은 key를 넣어둔다.
+```js
+// db.js
+import dotenv from "dotenv";        // dotenv를 import 한다.
+dotenv.config();                    // dotenv.config 함수로 .env 파일 안에 있는 정보를 불러올 수 있다.
+                                    // 모든 변수들을 process.env.key에 저장할 것이다.
+mongoose.connect(
+    process.env.MONGO_URL,          // mongoose connection 대신 process.env.MONG_URL 을 사용한다.
+    {
+        useNewUrlParser: true,
+        useFindAndModify: false
+    }
+);
+
+// init.js
+import dotenv from "dotenv";        // init.js 에서도 db.js와 마찬가지로 dotenv를 import 한다.
+dotenv.config();
+
+const PORT = process.env.PORT || 4000;
+```
+- 그리고 .gitignore 파일에 .env를 반드시 추가해야 한다.
+
+### #3.3 Video Model
+- model을 만들기 위해선 MongoDB에 현재 프로젝트 파일들이 어떤 식으로 생겨야할지 알려줘야 한다.
+- 예를 들어, '우리의 file들은 video라는 이름을 가질 것이고, 모든 video들은 string type을 가질 것이고, 그 string의 이름은 title일 것이다.' 와 같은 내용이다.
+- 이런 것이 바로 model의 형태(schema)이다.
+- models라는 폴더를 생성하고, Video.js 파일을 생성한다.
+
+```js
+// Video.js
+import mongoose from "mongoose";            // mongoose 와 연결해준다.
+
+const VideoSchema = new mongoose.Schema({   // Schema를 정의한다.
+    fileUrl: {                              // Video는 fileUrl을 가진다. Video는 서버에 저장하며, database에 Video를 저장하지는 않는다.
+        type: String,
+        required: "File URL is required"    // required 가 충족되지 않으면 이 메시지를 보여준다.
+    },
+    title: {
+        type: String,
+        required: "Title is required"
+    },
+    description: String,                    // 아무런 option 없다면 객체로 만들지 않아도 된다.
+    views: {                                // 조회수 항목을 가진다.
+        type: Number,
+        default: 0                          // 처음 Video가 생성되면 조회수는 0이다.
+    },
+    createdAt: {                            // 생성 일자 항목을 가진다.
+        type: Date,
+        default: Date.now                   // Date.now는 현재 날짜를 반환하는 함수이다.
+    }
+});
+
+const model = mongoose.model("Video", VideoSchema); // schema를 이용해서 model을 만든다.
+export default model;
+
+// init.js
+import "./models/Video";    
+// database와 연결은 되어있지만 database는 model이 있다는 것을 알지 못한다. 그래서 init.js에 추가해준다.
+```
+- schema는 model의 형태이고, model은 실제 data이다.
+- schema에 대해 더 확인하고 싶다면 [mongoosejs.com](https://mongoosejs.com/docs/guide.html)에서 모든 option들을 확인할 수 있다.
+
+### #3.4 Comment Model
+- Comment model을 추가해보자.
+
+```js
+import mongoose from "mongoose";
+
+const CommentSchema = new mongoose.Schema({
+    text: {
+        type: String,
+        required: "Text is required"
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+const model = mongoose.model("Comment", VideoSchema);   // video model에서 사용한 'model' 이라는 변수명을 동일하게 사용한 이유는
+export default model;                                   // 새로운 JS 파일로 작업을 하고 있고, 모듈을 사용하기 때문에 model을 default로 export 하고 나중에 그것을 Comment 또는 User로 가져올 것이므로 변수 이름이 같은 것은 중요하지 않기 때문이다.
+
+// init.js
+import "./models/Comment";
+```
+- Video model과 크게 다르지 않다.
+- 여기서 문제는 한 쪽에서 video를 생성하고 다른 쪽에서 comment를 생성했을 때 둘을 어떻게 연관시키는가 이다.
+- 두 가지 선택지가 있다. 모든 Comment ID들을 array로 Video에 집어 넣을 것인가, 혹은 Comment마다 그 comment가 연결되어 있는 Video ID를 넣을 것인가.
+
+```js
+// Comment에 Video ID를 넣는 방법
+// Comment.js
+const CommentSchema = new mongoose.Schema({
+    text: {
+        type: String,
+        required: "Text is required"
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    video: {
+        type: mongoose.Schema.Types.ObjectId,   // 모든 정보를 넣는 것이 아니라 ID만 넣는다.
+        ref: "Video"                            // 그리고 그 정보는 Video를 참조한다.
+    }
+});
+
+// Video에 Comment ID를 넣는 방법
+// Video.js
+const VideoSchema = new mongoose.Schema({
+    fileUrl: {
+        type: String,
+        required: "File URL is required"
+    },
+    title: {
+        type: String,
+        required: "Title is required"
+    },
+    description: String,
+    views: {
+        type: Number,
+        default: 0
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    comments: [
+        {
+            type: mongoose.Schema.Types.ObjectId,   // 모든 정보를 넣는 것이 아니라 ID만 넣는다.
+            ref: "Comment"                          // 그리고 그 정보는 Comment를 참조한다.
+        }                                           // [1, 2, 4, 7] 이런 식으로 해당 video에 남긴 comment id가 저장된다.
+    ]
+});
+```
+- 이번 프로젝트에서는 Video에 Comment ID array를 넣는 방식을 사용한다.
+
+### #3.5 Home Controller Finished
+- 이렇게 만든 Model들을 어떻게 사용할 수 있을까?
+
+```js
+// videoController.js
+import Video from "../models/Video";
+```
+- 먼저 videoController에 Video를 import 한다. 여기서 Video는 database의 element가 아니라 element를 받는 통로일 뿐이다.
+
+```js
+// videoController.js
+export const home = async (req, res) => {                   // async 는 await 를 사용하기 위해 반드시 추가해야 한다.
+    try {                                                   // 우리가 해야할 것을 try에 넣는다.
+        const videos = await Video.find({});
+        res.render("home", { pageTitle: "Home", videos });
+    } catch (error) {                                       // error가 가면 error를 잡아서 catch 구문을 실행한다.
+        console.log(error);
+        res.render("home", {pageTitle: "Home", videos: []});
+    }
+}
+```
+- home 함수에 async/await를 추가하여 database에 있는 모든 Video 목록을 가져오는 것을 기다리도록 했다.
+- asyncs는 'JavaScript야, 이 함수의 특정 부분은 꼭 기다려야 해.' 라고 이야기하는 것과 같다.
+- await는 다음 과정이 끝날 때까지 잠시 기다리라는 것이다.
+- **하지만 await가 다음 과정이 '성공적'으로 끝날 때까지 기다리라는 것은 아니다.** error가 나더라도 끝난 것이며, render 부분을 실행할 것이다.
+- 이를 막기 위해 try/catch를 사용한다.
+
+### #3.6 Uploading and Creating a Video
