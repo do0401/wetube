@@ -1411,4 +1411,151 @@ export const home = async (req, res) => {                   // async 는 await �
 - **하지만 await가 다음 과정이 '성공적'으로 끝날 때까지 기다리라는 것은 아니다.** error가 나더라도 끝난 것이며, render 부분을 실행할 것이다.
 - 이를 막기 위해 try/catch를 사용한다.
 
+## `7일차`
 ### #3.6 Uploading and Creating a Video
+- videoController에 postUpload를 확인해보자.
+- 먼저 업로드하려는 파일은 오직 video 파일만 가능해야 한다.
+
+```pug
+//- upload.pug
+input(type="file", id="file", name="file", required=true, accept="video/*")
+//- accept 속성을 추가하여 video만 업로드 가능하도록 한다.
+```
+- 그리고 우리가 원하는 것은 database에 저장할 것은 video 자체가 아니라 video의 location 이다.
+- 파일을 upload 하고 url을 반환하는 middleware가 필요하다. 
+- 그것은 [Multer](https://github.com/expressjs/multer)라고 하는 middleware 이며, 매우 유명하고 많이 사용된다.
+
+`npm install multer`
+- multer를 설치한다.
+
+```pug
+//- upload.pug
+form(action=`/videos${routes.upload}`, method="post", enctype="multipart/form-data")
+//- enctype 을 추가한다. multer는 해당 인코딩 타입이 아닌 폼에서는 동작하지 않는다.
+```
+- upload.pug 에서 form의 enctype을 추가해준다.
+- multer 설정 방법은 아래와 같다.
+
+```js
+// middlewares.js
+import multer from "multer";        // multer를 import 한다.
+import routes from "./routes";
+
+const multerVideo = multer({dest: "videos/"});  // multerVideo 변수에 destination을 포함하여 multer 함수를 담는다.
+
+export const localMiddleware = (req, res, next) => {
+    res.locals.siteName = "WeTube";
+    res.locals.routes = routes;
+    res.locals.user = {
+        isAuthenticated: true,
+        id: 1
+    }
+    next();
+}
+
+export const uploadVideo = multerVideo.single('videoFile'); // single은 하나의 파일만 업로드할 수 있는 것을 의미한다. single 안에는 파일의 이름을 넣어준다.
+
+// upload.pug
+input(type="file", id="file", name="videoFile", required=true, accept="video/*")
+// upload.pug에서도 name을 'videoFile'로 동일하게 변경한다.
+```
+- 이제 router에 multer를 추가한다.
+```js
+// videoRouter.js
+import { uploadVideo } from "../middlewares";
+
+videoRouter.post(routes.upload, uploadVideo, postUpload);
+```
+- 이제 파일을 업로드하면 server에 있는 folder(videos/)에 업로드하고 postUpload 함수는 해당 파일에 url 방식으로 접근할 것이다.
+
+```js
+// videoController.js
+export const postUpload = (req, res) => {
+    const { body, file }= req;      // req.file을 정의하고
+    console.log(file);              // console.log로 file을 확인해본다.
+    // To Do: Upload and save video
+    // res.redirect(routes.videoDetail(324393));    // redirect는 잠시 막고
+    res.render("upload", { pageTitle: "Upload" });  // render만 하게 변경한다. 지금만 잠시 변경하는 것이다.
+};
+```
+- 위와 같이 수정 후 페이지에서 upload를 해보면 터미널에서 file 내용을 확인할 수 있다.
+- videos 폴더에 multer가 만든 파일도 추가되었다.
+
+```
+{ fieldname: 'videoFile',
+  originalname: 'SampleVideo_1280x720_5mb.mp4',
+  encoding: '7bit',
+  mimetype: 'video/mp4',
+  destination: 'videos/',
+  filename: '40cfe9f2640dc43fdafd9a69c7deef08',
+  path: 'videos\\40cfe9f2640dc43fdafd9a69c7deef08',
+  size: 5253880 
+}
+```
+- 우리가 원한 것은 바로 'path' 이다. 다시 videoController 코드를 수정하고, path를 사용해보자.
+
+```js
+// videoController.js
+export const postUpload = async (req, res) => {     // async를 추가한다.
+    const { 
+        body: { title, description },
+        file: { path }
+    }= req;
+    const newVideo = await Video.create({   // 새 video 생성이 완료될 때까지 기다리도록 await를 추가한다.
+        fileUrl: path,      // fileUrl에 path를 넣어준다.
+        title,              // title과 description은 변수명이 동일하다.
+        description
+    });
+    console.log(newVideo);
+    res.redirect(routes.videoDetail(newVideo.id));  // 이제 실제 video id를 받아서 redirect한다.
+};
+```
+- async/await를 추가하여 newVideo에 새로운 파일을 추가했다. 그리고 videoDetail로 실제 새로운 video id를 받아서 redirect 했다.
+- 드디어 NodeJS, Multer, MongoDB를 이용해서 file을 생성했다.
+
+### #3.7 Uploading and Creating a Video part Two
+- 업로드 폴더를 수정한다. 기존 videos 폴더는 삭제한다.
+
+```js
+// middlewares.js
+const multerVideo = multer({dest: "uploads/videos/"})
+```
+```pug
+.videos
+    each item in videos
+        +videoBlock({
+            id: item.id,
+            title: item.title,
+            views: item.views,
+            videoFile: item.fileUrl     // videoFile 을 fileUrl 로 수정한다.
+        })
+```
+- home.pug 에서 위와 같이 수정한다.
+- 위에서 업로드 폴더를 수정했지만, 기존에 업로드했던 video가 database에 저장되어 있고 이 video는 잘못된 url을 가지고 있다.
+- 그러므로 db에서 해당 video를 삭제해야 한다.
+
+`mongo`
+- terminal에 mongo를 입력하여 mongo comment 입력화면으로 들어간다.
+```mongo
+// mongo
+> use we-tube               // we-tube db로 이동한다.
+switched to db we-tube
+> show collections          // collections은 models 같은 것이다. videos 라는 collections가 존재한다.
+videos
+> db.videos.remove({})      // db에 있는 videos collections를 삭제한다.
+WriteResult({ "nRemoved" : 1 })     // 1개의 collection을 삭제했다고 결과가 나온다.
+> exit
+bye
+```
+- 위와 같은 방법으로 db에 접근하여 기존에 저장되어 있던 videos model을 삭제했다.
+- 이제 새롭게 video를 업로드해보면, 하나의 error가 발생한다. uploads를 위한 router가 없기 때문이다.
+
+```js
+app.use("/uploads", express.static("uploads"));     // /uploads 에 대한 router를 추가한다.
+// static은 directory에서 file을 보내주는 middleware다. 즉, '/uploads'로 가면 'uploads' 라는 directory 안으로 들어간다. 주어진 directory에서 file을 전달하는 middleware 함수이므로, 이 경우 어떤 종류의 controller나 view 같은 건 확인하지 않는다.
+```
+- /uploads router를 추가하면 이제 home 화면에서 video가 제대로 보인다.
+- 하지만 이것은 좋은 예시는 아니다. user의 파일을 개인 server에 저장하는 것은 좋은 것은 아니다.
+- 보통 웹사이트에는 server를 만들고 새로운 version이 나오면 새로운 server로 redirect만 시키는 것이다.
+- we-tube 프로젝트에서도 최종적으로는 그렇게 수정할 것이다. 지금처럼 하는 것은 시범적으로 하는 것임을 명심해야 한다.
+- 마지막으로 uploads 폴더는 .gitignore에 추가해준다.
