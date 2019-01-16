@@ -1559,3 +1559,183 @@ app.use("/uploads", express.static("uploads"));     // /uploads 에 대한 route
 - 보통 웹사이트에는 server를 만들고 새로운 version이 나오면 새로운 server로 redirect만 시키는 것이다.
 - we-tube 프로젝트에서도 최종적으로는 그렇게 수정할 것이다. 지금처럼 하는 것은 시범적으로 하는 것임을 명심해야 한다.
 - 마지막으로 uploads 폴더는 .gitignore에 추가해준다.
+
+## `8일차`
+### #3.8 Getting Video by ID
+- Video의 ID를 받아와야 한다.
+
+```js
+// videoController.js
+export const videoDetail = (req, res) => {
+    console.log(req.params);
+    res.render("videoDetail", { pageTitle: "Video Detail" });
+};
+```
+- req.params 를 console.log로 찍어보면 id를 확인할 수 있다.
+- 하지만 이것은 이름이 id일 때만 성립한다. 우리의 routes.js를 확인해보자.
+
+```js
+// routes.js
+const VIDEO_DETAIL = "/:id";    // :id를 가지고 있으며 :id는 변수를 받는다.
+```
+- controller에서 어떤 data를 가지고 있다는 것을 표현하고 싶다면 :id와 같이 콜론(:)과 이름을 넣으면 된다.
+- 이것이 url로 부터 정보를 가져오는 유일한 방법이다.
+
+```js
+// videoController.js
+export const videoDetail = async (req, res) => {    // async 를 추가한다.
+    const {
+        params: {id}        // params로부터 id를 가져온다.
+    } = req;
+    try {
+        const video = await Video.findById(id);     // id로 검색해서 video 변수에 담는다.
+        res.render("videoDetail", { pageTitle: "Video Detail" });
+    } catch(error) {
+        res.redirect(routes.home);      // error 발생 시 home으로 redirection 한다.
+    }
+}
+```
+- 이전에 home controller나 postUpload controller에 작업했던 내용과 비슷하다.
+- videoDetail에서는 findById 함수를 사용했을 뿐이다.
+- 이제 video 변수를 템플릿에 전달하고, videoDetail.pug 를 수정해보자.
+
+```js
+// videoController.js
+export const videoDetail = async (req, res) => {
+    const {
+        params: {id}
+    } = req;
+    try {
+        const video = await Video.findById(id);
+        res.render("videoDetail", { pageTitle: "Video Detail", video });    // 템플릿에 video를 전달한다.
+    } catch(error) {
+        res.redirect(routes.home);
+    }
+}
+```
+```pug
+//- videoDetail.pug
+block content
+    .video__player
+        video(src=`/${video.fileUrl}`)
+        //- src 를 위와 같이(`/${}`) 하는 이유는 파일이 서버에 있기 때문이다.
+        //- 우리는 서버에 파일이 있지 않길 원하기 때문에 나중에 이 부분은 아마존에 맡길 것이다.
+    .video__info
+        h5.video__title=video.title
+        span.video__views=video.views
+        p.video__description=video.description
+```
+- videoDetail.pug 파일에 비디오 상세 페이지에서 표시되어야 할 내용을 받아서 출력해줬다.
+- 이제 video를 수정하는 버튼을 만든다.
+
+```pug
+//- videoDetail.pug
+block content
+    .video__player
+        video(src=`/${video.fileUrl}`)
+    .video__info
+        a(href=routes.editVideo) Edit video
+        //- video 수정 버튼을 추가한다.
+        h5.video__title=video.title
+        span.video__views=video.views
+        p.video__description=video.description
+```
+- edit 버튼은 일단 모든 사용자가 사용할 수 있게 만들지만, 나중에는 video를 생성한 사람만 보이도록 수정할 것이다.
+
+### #3.9 Editing a Video
+- 이전에 userDetial과 videoDetail에서 했던 것처럼 editVideo도 id가 있을 경우, url에 id가 보여지도록 routes.js 를 수정한다.
+
+```js
+// routes.js
+const routes = {
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            __code skip__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    editVideo: id => {
+        if(id) {
+            return `/videos/${id}/edit`;
+        } else {
+            return EDIT_VIDEO;
+        }
+    },
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            __code skip__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+}
+
+// videoRouter.js
+videoRouter.get(routes.editVideo(), editVideo);     // editVideo를 함수로 바꿔준다.
+```
+```pug
+//- videoDetail.pug
+.video__info
+    a(href=routes.editVideo(video.id)) Edit video   
+    //- editVideo를 함수로 바꾸고 video.id 를 넣어준다.
+```
+- routes.js를 수정하고, videoRouter.js와 videoDetail.js 의 editVideo를 함수로 변경했다.
+- edit 을 할 때 video 파일을 바꾸는 것은 원치 않으므로 edit 화면에는 video 파일을 배치하지 않았다.
+- upload에서와 마찬가지로 edit도 get과 post로 분리해야 한다.
+
+```js
+// videoController.js
+export const getEditVideo = (req, res) => res.render("editVideo", { pageTitle: "Edit Video" });
+export const postEditVideo = (req, res) => {};
+
+// videoRouter.js
+import { getUpload, postUpload, videoDetail, deleteVideo, getEditVideo, postEditVideo } from "../controllers/videoController";
+
+videoRouter.get(routes.editVideo(), getEditVideo);
+videoRouter.post(routes.editVideo(), postEditVideo);
+```
+- video를 edit할 때 edit 화면에서도 url에서 id정보를 받아야 한다.
+- 또한 video를 edit할 때 제목이나 설명 입력칸이 채워져 있어야 한다.
+
+```js
+// videoController.js
+export const getEditVideo = async (req, res) => {   // 뭔가를 채워넣는 작업이므로 getEditVideo에 작성한다.
+    const {
+        params: {id}
+    } = req;
+    try {
+        const video = await Video.findById(id);
+        res.render("editVideo", {pageTitle: `Edit ${video.title}`, video})
+    } catch(error) {
+        res.redirect(routes.home);
+    }
+}
+```
+- getEditVideo controller 내용은 videoDetail controller 내용과 거의 비슷하다.
+
+```pug
+//- editVideo.pug
+block content
+    .form-container
+        form(action=routes.editVideo(video.id), method="post")
+            input(type="text", placeholder="Title", name="title", value=video.title)
+            textarea(name="description", placeholder="Description")=video.description
+            //- textarea 태그에는 value가 없으므로 위와 같이 값을 넣어준다.
+            input(type="submit", value="Update Video")
+        a.form-container__link.form-container__link--delete(href=`/videos${routes.deleteVideo}`) Delete Video
+```
+- editVideo를 함수로 바꾸고, text input에 value를 넣고, textarea에 description을 넣어주었다.
+- 이제 실질적 업데이트를 위한 작업을 해야한다.
+
+```js
+// videoController.js
+export const postEditVideo = async (req, res) => {
+    const {
+        params: {id},
+        body: {title, description}
+    } = req;
+    try {
+        await Video.findOneAndUpdate({_id: id}, {title, description});  // id, title, description을 찾아서 바뀐 값으로 업데이트한다.
+        res.redirect(routes.videoDetail(id));       // 업데이트가 완료되면 videoDetail 페이지로 redirection 된다.
+    } catch(error) {
+        res.redirect(routes.home);
+    }
+};
+```
+- findOneAndUpdate 함수에서 id에 접근하고자 할 때는 {id} 가 아닌 {_id: id} 와 같이 넣어주어야 한다.
+- findById 함수를 사용할 때 findById(id)로 사용할 수 있었던 것은 findById 함수가 알아서 처리해주기 때문이다. 
+- findById(id) 는 findOne({_id: id}) 와 거의 동일하며, _id 로 쿼리하고자 한다면 findOne() 대신 findById()를 사용하라고 [mongoosejs.com](https://mongoosejs.com/docs/api.html#model_Model.findById) 에서 권장하고 있다.
+- 참고로 _id 속성은 MongoDB에서 자동으로 넣어주는 고유값이다.
