@@ -1896,6 +1896,7 @@ export const search = async (req, res) => {     // async를 추가한다.
   res.render("search", { pageTitle: "Search", searchingBy, videos });
 };
 ```
+  > 참조 문서: [MongoDB $regex](https://docs.mongodb.com/manual/reference/operator/query/regex/)
 - 위와 같이 search controller를 수정하고, 페이지에서 특정 video 타이틀의 일부 단어만으로 검색하면 그 단어가 포함된 video가 검색되는 것을 볼 수 있다.
 
 ```pug
