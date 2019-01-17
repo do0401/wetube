@@ -1739,3 +1739,202 @@ export const postEditVideo = async (req, res) => {
 - findById 함수를 사용할 때 findById(id)로 사용할 수 있었던 것은 findById 함수가 알아서 처리해주기 때문이다. 
 - findById(id) 는 findOne({_id: id}) 와 거의 동일하며, _id 로 쿼리하고자 한다면 findOne() 대신 findById()를 사용하라고 [mongoosejs.com](https://mongoosejs.com/docs/api.html#model_Model.findById) 에서 권장하고 있다.
 - 참고로 _id 속성은 MongoDB에서 자동으로 넣어주는 고유값이다.
+
+## `9일차`
+### #3.10 Deleting a Video
+- video를 삭제하는 데에는 get만 있으면 된다.
+
+```js
+// videoController.js
+export const deleteVideo = async (req, res) => {
+    const {
+        params: {id}        // editVideo에서와 마찬가지로 url로부터 id를 받아온다.
+    } = req;
+    try {
+        await Video.findOneAndRemove({_id: id});    // 받아온 id를 가진 video를 찾고 삭제한다.
+    } catch(error) {}
+    res.redirect(routes.home)   // 삭제가 성공하든 실패하든 Home 으로 이동한다.
+}
+
+// routes.js
+const routes = {
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            __code skip__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    deleteVideo: (id) => {      // deleteVideo 도 url에 id가 표시되도록 수정한다.
+        if(id) {
+            return `/videos/${id}/delete`;
+        } else {
+            return DELETE_VIDEO;
+        }
+    }
+};
+
+// videoRouter.js
+videoRouter.get(routes.deleteVideo(), deleteVideo); // deleteVideo를 함수로 바꿔준다.
+```
+- videoController에서 deleteVideo를 수정하고, routes와 videoRouter도 수정했다.
+- 기존에 videoDetail이나 editVideo에서 했던 작업과 비슷하다.
+```pug
+//- editVideo.pug
+a.form-container__link.form-container__link--delete(href=routes.deleteVideo(video.id)) Delete Video
+//- href 부분을 수정한다.
+```
+- editVideo.pug에서 href 부분도 수정한다.
+- 그리고 videoDetail 페이지에 표시되는 타이틀을 video title로 바꿔주자. 'Video Detail' 이라고 표시되는 것보다 그게 더 낫다.
+
+```js
+// videoController.js
+export const videoDetail = async (req, res) => {
+    const {
+        params: {id}
+    } = req;
+    try {
+        const video = await Video.findById(id);
+        res.render("videoDetail", { pageTitle: video.title, video });   // video.title로 수정한다.
+    } catch(error) {
+        res.redirect(routes.home);
+    }
+}
+```
+
+### #3.11 Installing ESLint
+- wetube 페이지에서 2개 이상의 video를 업로드해보자.
+- home 화면에서 더 예전에 업로드한 video가 상단에 보인다. 이것을 수정할 것이다.
+
+```js
+// videoController.js
+export const home = async (req, res) => {
+    try {
+        const videos = await Video.find({}).sort({_id: -1});    // sort 함수로 _id 정렬 순서를 바꿔줬다.
+        res.render("home", { pageTitle: "Home", videos });      // '-1'은 순서를 바꾸겠다는 약속이다.
+    } catch (error) {
+        console.log(error);
+        res.render("home", {pageTitle: "Home", videos: []});
+    }
+}
+```
+- sort 함수로 정렬 순서를 바꿨다.
+- 이번에는 wetube 페이지에서 아무 것이나 검색해보자. video is not defined 에러가 보일 것이다.
+- search view가 video를 가지고 있지만 search controller에 video가 정의되지 않았기 때문이다.
+- 이와 관련해서 ESLint를 소개한다. Linter는 코드 상에서 뭔가가 틀렸을 때 알려준다.
+
+`npm install -g eslint`
+- eslint를 global로 설치한다.
+
+`eslint --init`
+- 설치가 되면 터미널에 위와 같이 입력한다.
+- 여러가지 물어보는데, 가장 많이 사용하는 스타일 가이드 선택, Airbnb 스타일 선택, react use no, config file format javascript 선택을 한다.
+- 마지막으로 npm으로 설치하겠냐는 질문에 y를 입력하면 설치가 진행된다.
+- 설치 완료 후 열려있는 js 파일을 닫고 다시 열어보면 eslint가 작동하는 것을 볼 수 있다.
+- 만약 windows OS를 사용한다면, 수많은 'linebreak-style' 에러를 확인할 수 있을 것이다.
+- 그것은 unix OS와 windows OS 간에 linebreak에 대한 차이점으로 인해 발생하며, windows OS의 경우, 아래와 같이 eslintrc.js에 rules를 추가해야 한다.
+
+```js
+module.exports = {
+    "extends": "airbnb-base",
+    "rules": {
+        "linebreak-style": [2, "windows"],   // windows OS configuration
+    }
+};
+```
+- 위와 같이 설정 후 videoController.js 파일을 다시 열어서 확인하면 'linebreak-style' 에러가 사라진 것을 알 수 있다.
+- 하지만 아직도 코딩 스타일 관련 에러가 보일 것이다. (ex. Strings must use singlequote.[quotes])
+- 이런 코딩 스타일에 대한 rule은 보고 싶지 않으므로 추가적으로 아래와 같은 작업을 진행한다.
+
+`npm install prettier -D`
+
+`npm install eslint-config-prettier -D`
+
+`npm install eslint-plugin-prettier -D`
+
+- 모두 설치한 후 .eslintrc.js 에 extends를 추가한다.
+
+```js
+module.exports = {
+    "extends": ["airbnb-base", "plugin:prettier/recommended"],  // plugin을 추가한다.
+    "rules": {
+        "linebreak-style": [2, "windows"],
+        "no-console": "off"         // 동의하지 않는 규칙은 이런 식으로 설정하면 eslint가 체크하지 않는다.
+    }
+};
+```
+- 위에서 no-console은 console.log 관련 경고를 없애주는 설정이다.
+- plugin을 추가하고 videoController.js 를 다시 확인하면 코딩 스타일 관련 에러가 사라진 것을 확인할 수 있다.
+
+```json
+// settings.json
+  "editor.tabSize": 2,  // tabSize를 2로 수정했다.
+```
+- 추가적으로 tabsize를 4에서 2로 바꾸고, 기존 js 파일에 적용된 4 size tabsize를 모두 2로 수정했다.
+
+### #3.12 Searching Videos
+- #3.11 첫 부분에서 설명한 것과 같은 이유로 search controller를 수정해야 한다. 그리고 여기서 정규표현식을 사용하려고 한다.
+- 정규표현식(regular expression)은 string으로부터 무언가를 가져오는 것이다.
+- 정규표현식은 [regular expressions 101](https://regex101.com/)에서 다양한 정보를 확인할 수 있다.
+- 이제 videoController.js 로 돌아와서 search controller를 확인하자.
+
+```js
+// videoController.js
+export const search = async (req, res) => {     // async를 추가한다.
+  const {
+    query: { term: searchingBy }
+  } = req;
+  let videos = [];      // videos를 let으로 선언한다.
+  try {
+    videos = await Video.find({
+      title: { $regex: searchingBy, $options: "i" }
+    // title: searchingBy 라고 사용하면 찾고자 하는 단어와 완전히 일치하는 것만 찾는다.
+    // 정규표현식으로 찾으면 찾고자 하는 단어가 포함된 모든 것을 찾게 된다.
+    // $regex: searchingBy 는 MongoDB에서 제공하는 정규표현식 기능이다.
+    // $option 은 $regex와 함께 사용할 수 있는 option 기능이다. 
+    // "i" 는 insensitive(덜 민감한)하다는 것을 의미한다. 대소문자를 구분하지 않는다.
+    });
+  } catch (error) {
+    console.log(error);
+  }
+  res.render("search", { pageTitle: "Search", searchingBy, videos });
+};
+```
+- 위와 같이 search controller를 수정하고, 페이지에서 특정 video 타이틀의 일부 단어만으로 검색하면 그 단어가 포함된 video가 검색되는 것을 볼 수 있다.
+
+```pug
+//- search.pug
+.search__videos
+    if videos.length === 0
+        h5 No Videos Found
+    each item in videos
+            +videoBlock({
+            title: item.title,
+            views: item.views,
+            videoFile: item.videoFile
+            })
+```
+- video를 찾지 못했을 때 No Videos Found 문구를 표시하도록 수정한다.
+- video가 검색된 화면에서 videoDetail 페이지로 이동하는 url을 확인해보면 url이 잘못되어 있다는 것을 알 수 있다.(/:id 로 표시된다.)
+- search.pug 에서 videoBlock에 id를 할당하지 않았기 때문이다.
+
+```pug
+//- search.pug
+.search__videos
+    if videos.length === 0
+        h5 No Videos Found
+    each item in videos
+            +videoBlock({
+            title: item.title,
+            views: item.views,
+            videoFile: item.videoFile,
+            id: item.id     // id를 받아온다.
+            })
+```
+- 마지막으로 videoDetail 페이지에 comments를 추가한다. 현재는 댓글이 없으니 댓글의 수만 보여준다.
+
+```pug
+//- videoDetail.pug
+.video__comments
+    if video.comments.length === 1
+        span.video__comment-number 1 comment
+    else
+        span.video__comment-number #{video.comments.length} comments
+```
+- comment를 추가했다. comments.length 가 1인 경우만 따로 구분한 것은 1 comment's' 를 막기 위해서 이다.
