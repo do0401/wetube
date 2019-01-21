@@ -1880,7 +1880,7 @@ export const search = async (req, res) => {     // async를 추가한다.
   const {
     query: { term: searchingBy }
   } = req;
-  let videos = [];      // videos를 let으로 선언한다.
+  let videos = [];      // videos를 let으로 선언한다. 
   try {
     videos = await Video.find({
       title: { $regex: searchingBy, $options: "i" }
@@ -1898,6 +1898,7 @@ export const search = async (req, res) => {     // async를 추가한다.
 ```
   > 참조 문서: [MongoDB $regex](https://docs.mongodb.com/manual/reference/operator/query/regex/)
 - 위와 같이 search controller를 수정하고, 페이지에서 특정 video 타이틀의 일부 단어만으로 검색하면 그 단어가 포함된 video가 검색되는 것을 볼 수 있다.
+- videos를 let으로 선언한 이유는, 선언하면서 빈 배열의 videos를 만들었고, 어떤 video도 찾지 못한다면 빈 배열로 render 될 것이다. 하지만 video를 찾는다면 videos는 재할당된다. 재할당되는 변수는 const가 아닌 let으로 선언해야 한다.
 
 ```pug
 //- search.pug
@@ -1939,3 +1940,235 @@ export const search = async (req, res) => {     // async를 추가한다.
         span.video__comment-number #{video.comments.length} comments
 ```
 - comment를 추가했다. comments.length 가 1인 경우만 따로 구분한 것은 1 comment's' 를 막기 위해서 이다.
+
+## `10일차`
+## #4 Webpack
+### #4.0 Introduction to Webpack
+- webpack은 module bundler 이다. 다양한 종류의 코드 파일을 webpack에게 전달하면, webpack은 그것들을 완전히 호환되는 static 파일들로 변환해준다.
+
+`npm install webpack webpack-cli`
+- webpack과 webpack-cli를 설치한다.
+- webpack은 webpack을 사용하기 위함이고, webpack-cli는 터미널에서 webpack을 사용할 수 있게 해준다.
+- 그리고 'webpack.config.js' 라는 파일을 하나 생성한다.
+
+```json
+"scripts": {
+    "dev:server": "nodemon --exec babel-node init.js --delay 2",
+    "dev:assets": "webpack"
+},
+```
+- 다음으로 package.json 에서 scripts 의 'start' 명령어를 바꿔준다.
+- 이제 npm start 는 사용하지 않을 것이며 npm run dev:assets 와 npm run dev:server 를 각자 다른 콘솔에서 실행시켜야 한다.
+- dev:assets 명령어를 실행하면 webpack을 불러오고 webpack은 자동적으로 webpack.config.js 라는 이름의 파일을 찾는다.
+- webpack.config.js 파일 안에서 명심해야 될 사항은 server 코드와는 연관시키지 않는다는 점이다. 100% client code 이다.
+
+```js
+// main.js
+import "../scss/styles.scss";
+```
+```scss
+// styles.scss
+body {
+  background-color: red;
+}
+```
+- assets 폴더를 생성하고 그 안에 main.js 파일을 생성한다. 또한 scss 폴더를 생성하고 그 안에 styles.scss 파일을 생성한다.
+
+```js
+// webpack.config.js
+const path = require("path");   // nodeJS에는 파일과 디렉토리(경로)를 absolute로 만들어주는 방법이 있다.
+                                // 다시 말해, 컴퓨터나 서버에서의 전체 경로를 갖게 되는 것이다.
+                                // 그것은 path 라는 것으로 할 수 있으며, path는 nodeJS에 기본으로 깔려있는 패키지다.
+const ENTRY_FILE = path.resolve(__dirname, "assets", "js", "main.js");  // __dirname 은 현재의 프로젝트 디렉토리 이름이다.
+const OUTPUT_DIR = path.join(__dirname, "static");                      // 어디서든 접근 가능한 nodeJS 전역 변수이다.
+
+const config = {
+  entry: ENTRY_FILE,    // entry 는 파일들이 어디서 왔는가 이고,
+  output: {             // output 은 변환된 파일들을 어디에 넣을 것인가 이다.
+    path: OUTPUT_DIR,
+    filename: "[name].[format]"
+  }
+};
+
+module.exports = config;
+```
+- webpack.config.js 에 내용을 입력한다.
+- 여기서는 우리가 이전에 사용했던 babel-node를 쓸 수 없으므로, es6가 아닌 옛날 자바스크립트를 사용해야 한다.
+
+`npm run dev:assets`
+- 이제 터미널에서 webpack을 실행시킨다.
+- 하지만 scss 파일은 빌드 실패할 것이다. scss 파일 형식을 이해하지 못했기 때문이다. sass loader 가 필요하다.
+
+### #4.1 Styles with Webpack part One
+- webpack 에는 'development' 와 'production' 이라는 mode 옵션이 있다.
+- 'production' mode로 빌드하게 되면 코드가 압축되며, 개발하는 중에는 디버그를 위해 'development' mode로 빌드하는 것이 좋다.
+
+
+```json
+// package.json
+"scripts": {
+    "dev:server": "nodemon --exec babel-node init.js --delay 2",
+    "dev:assets": "WEBPACK_ENV=development webpack",    // WEBPACK_ENV 에 development 를 설정했다.
+    "build:assets": "WEBPACK_ENV=production webpack"    // WEBPACK_ENV 에 production 을 설정했다.
+},
+```
+- webpack 빌드 시 mode 를 구분하기 위해 package.json 파일의 scripts 부분을 수정한다.
+
+```js
+// webpack.config.js
+const path = require("path");
+
+const MODE = process.env.WEBPACK_ENV;   // 위 scripts 에서 생성한 환경변수를 MODE 변수에 넣는다.
+
+const ENTRY_FILE = path.resolve(__dirname, "assets", "js", "main.js");
+const OUTPUT_DIR = path.join(__dirname, "static");
+
+const config = {
+  mode: MODE,           // mode 를 설정한다.
+  entry: ENTRY_FILE,
+  output: {
+    path: OUTPUT_DIR,
+    filename: "[name].[format]"
+  }
+};
+
+module.exports = config;
+```
+- webpack.config.js 에서 환경변수를 사용하여 mode를 설정한다.
+
+`npm run dev:assets`
+- 다시 실행하면, "'WEBPACK_ENV'은(는) 내부 또는 외부 명령, 실행할 수 있는 프로그램, 또는
+배치 파일이 아닙니다." 라는 오류를 볼 수 있을 것이다.(발생하지 않을 수도 있다.)
+
+`npm install cross-env`
+- cross-env 설치하고 아래와 같이 package.json 파일에 cross-env 명령어를 넣어준다.
+
+```json
+"scripts": {
+    "dev:server": "nodemon --exec babel-node init.js --delay 2",
+    "dev:assets": "cross-env WEBPACK_ENV=development webpack",
+    "build:assets": "cross-env WEBPACK_ENV=production webpack"
+},
+```
+- 이후 npm run dev:assets 를 실행하면 정상적으로 빌드된다.
+- 이제 webpack 에게 rules 라는 것을 줄 것이다. webpack은 module을 만났을 때 이 rules 를 따르게 된다.
+
+```js
+// webpack.config.js
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            __code skip__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+const config = {
+  mode: MODE,
+  module: {         // module 을 만나면 다음과 같은 rules 를 따른다.
+    rules: [
+      {
+        test: /\.(scss)$/,              // 파일을 만나면 그 파일이 .scss 인지 확인한다.
+        use:
+      }
+    ]
+  },
+  entry: ENTRY_FILE,
+  output: {
+    path: OUTPUT_DIR,
+    filename: "[name].[format]"
+  }
+};
+```
+- config 파일에 module, rules 를 추가한다. 그리고 scss 파일을 만났을 때 처리할 내용을 use 에 넣을 것이다.
+- scss 파일을 만났을 때 할 일은, 먼저 scss 를 css 로 바꾸고, 전체 텍스트 중 그 css의 텍스트를 추출하고, 그 추출된 css를 분리된 하나의 파일로 만드는 것이다.
+- 그러기 위해 extract-text-webpack-plugin 을 설치한다.
+
+`npm install extract-text-webpack-plugin@next`
+- @next 는 최신 버전을 설치하라는 것이다. webpack 4 이상과 호환되어야 하기 때문에 최신 버전을 설치한다.
+
+```js
+const ExtractCSS = require("extract-text-webpack-plugin");  // extract-text-webpack-plugin을 불러온다.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            __code skip__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    module: {
+        rules: [
+            {
+                test: /\.(scss)$/,
+                use: ExtractCSS.extract([           // 4. css 코드를 별도의 css 파일로 분리시킨다.
+                    {
+                        loader: "css-loader"        // 3. css 텍스트를 추출한다.
+                    },
+                    {
+                        loader: "postcss-loader"    // 2. css 호환성을 부여한다.
+                    },
+                    {
+                        loader: "sass-loader"       // 1. sass 를 css 로 바꾼다.
+                    }
+                ])
+            }
+        ]
+    },
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            __code skip__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
+- webpack은 loader를 사용할 때 코드 아래쪽을 먼저 시작해서 위쪽으로 실행한다.
+- loader에 대한 자세한 내용은 #4.2 에서 설명한다.
+
+### #4.2 Styles with Webpack part Two
+이전 장에서 사용한 loader와 plugin에 대해 간단히 설명한다.
+
+`sass-loader`
+- Sass 혹은 scss 를 받아서 일반 CSS 파일로 바꿔주는 loader 이다.
+
+`postcss-loader`
+- CSS를 받아서, 우리가 이 loader 에게 주는 어떤 plugin을 가지고 CSS를 변환한다.
+- 예를 들어, IE 브라우저와 호환되게 만든다든지, prefix(접두사)부터 잡다한 것들까지 처리해준다.
+
+`css-loader`
+- webpack이 CSS를 이해할 수 있게 한다.
+
+`extract-text-webpack-plugin`
+- 최종적으로 CSS 내용이 불러와지면, 해당 CSS 텍스트 부분만 추출해서 어딘가로 보낸다.
+---
+`npm install css-loader postcss-loader sass-loader`
+- 이제 loader 들을 설치한다.
+
+
+- 그리고 postcss-loader 를 쓰기위해 우리가 필요한 plugin을 설치해야 한다.
+- postcss 는 엄청나게 많은 도구들이 있다.
+    > 참조: [postCSS](https://postcss.org/)
+- 우리는 autoprefixer 라는 plugin을 사용할 것이다. autoprefixer 는 옵션에 따라 브라우저와 자동으로 호환되게 해준다.
+- autoprefixer plugin에도 사용할 수 있는 옵션이 매우 많다.
+    > 참조: [Autoprefixer의 browserlist](https://github.com/browserslist/browserslist)
+- 우리는 cover 99.5% 옵션을 사용한다.
+
+```js
+// webpack.config.js
+const autoprefixer = require("autoprefixer");   // postcss-loader의 autoprefixer 플러그인을 불러온다.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            __code skip__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          {
+            loader: "postcss-loader",
+            options: {
+              plugin() {
+                return [autoprefixer({ browsers: "cover 99.5%" })]; // 시중에 있는 브라우저의 99.5%와 호환되게 해주는 옵션이다.
+              }
+            }
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            __code skip__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  entry: ENTRY_FILE,
+  output: {
+    path: OUTPUT_DIR,
+    filename: "[name].[format]"
+  },
+  plugins: [new ExtractCSS("styles.css")]   // extract-text-webpack-plugin 이 styles.css 라는 결과 파일을 생성한다.
+};
+
+module.exports = config;
+```
+- 위와 같이 autoprefixer 사용을 위한 코드를 추가한다.
+
+`npm install node-sass`
+- 그리고 sass를 nodeJS 환경에서 사용하기 위해 node-sass 패키지를 설치한다.
+
+- 이제 npm run dev:assets 을 실행시켜보면 정상적으로 빌드가 되는 것을 확인할 수 있다.
