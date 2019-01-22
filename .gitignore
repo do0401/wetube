@@ -78,5 +78,7 @@ typings/
 
 # DynamoDB Local files
 .dynamodb/
+
 package-lock.json
 uploads
+static

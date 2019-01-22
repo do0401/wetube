@@ -1986,7 +1986,7 @@ const config = {
   entry: ENTRY_FILE,    // entry 는 파일들이 어디서 왔는가 이고,
   output: {             // output 은 변환된 파일들을 어디에 넣을 것인가 이다.
     path: OUTPUT_DIR,
-    filename: "[name].[format]"
+    filename: "[name].js"
   }
 };
 
@@ -2028,7 +2028,7 @@ const config = {
   entry: ENTRY_FILE,
   output: {
     path: OUTPUT_DIR,
-    filename: "[name].[format]"
+    filename: "[name].js"
   }
 };
 
@@ -2071,7 +2071,7 @@ const config = {
   entry: ENTRY_FILE,
   output: {
     path: OUTPUT_DIR,
-    filename: "[name].[format]"
+    filename: "[name].js"
   }
 };
 ```
@@ -2139,6 +2139,7 @@ const ExtractCSS = require("extract-text-webpack-plugin");  // extract-text-webp
 - autoprefixer plugin에도 사용할 수 있는 옵션이 매우 많다.
     > 참조: [Autoprefixer의 browserlist](https://github.com/browserslist/browserslist)
 - 우리는 cover 99.5% 옵션을 사용한다.
+- **Autoprefixer는 크로스브라우징 이슈에 매우 좋은 해결책이 될 수 있을 것 같으므로 꼭 기억해두자!**
 
 ```js
 // webpack.config.js
@@ -2149,7 +2150,7 @@ const autoprefixer = require("autoprefixer");   // postcss-loader의 autoprefixe
           {
             loader: "postcss-loader",
             options: {
-              plugin() {
+              plugins() {
                 return [autoprefixer({ browsers: "cover 99.5%" })]; // 시중에 있는 브라우저의 99.5%와 호환되게 해주는 옵션이다.
               }
             }
@@ -2159,7 +2160,7 @@ const autoprefixer = require("autoprefixer");   // postcss-loader의 autoprefixe
   entry: ENTRY_FILE,
   output: {
     path: OUTPUT_DIR,
-    filename: "[name].[format]"
+    filename: "[name].js"
   },
   plugins: [new ExtractCSS("styles.css")]   // extract-text-webpack-plugin 이 styles.css 라는 결과 파일을 생성한다.
 };
@@ -2172,3 +2173,240 @@ module.exports = config;
 - 그리고 sass를 nodeJS 환경에서 사용하기 위해 node-sass 패키지를 설치한다.
 
 - 이제 npm run dev:assets 을 실행시켜보면 정상적으로 빌드가 되는 것을 확인할 수 있다.
+- static 폴더가 생성됐고 안에는 main.js 와 styles.css 파일이 생성되었다.
+- scss 파일이 제대로 css로 변환이 되는지 다시 한번 확인해보자.
+
+```scss
+// _varibales.scss
+$bgColor: red;
+
+// styles.scss
+@import "./config/variables";
+
+body {
+  background-color: $bgColor;
+}
+```
+- scss 폴더 하위에 config 폴더를 생성하고 그 안에 _variables.scss 파일을 만들었다.
+- 다시 빌드하면 아래와 같은 styles.css 파일이 만들어진 것을 확인할 수 있다.
+
+```css
+body {
+  background-color: red; }
+```
+
+## `11일차`
+### #4.3 ES6 with Webpack
+- 이번엔 ES6 를 webpack에게 이해시켜보자.
+
+`npm install babel-loader`
+- babel-loader를 설치한다.
+
+```js
+// webpack.config.js
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            __code skip__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  rules: [
+      {
+        test: /\.(js)$/,
+        use: [
+          {
+            loader: "babel-loader"
+          }
+        ]
+      },
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            __code skip__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
+- rules에 babel-loader를 추가한다.
+- 이제 webpack은 es6 코드를 이해한다. 물론 webpack 실행 후 static 파일의 main.js를 보면 차이점을 알기는 어렵다.
+
+- 참고로 매번 npm run dev:assets 를 입력해서 webpack을 실행하는 것은 조금 귀찮으므로, 파일이 수정되면 자동으로 재실행되도록 설정한다.
+
+```json
+// package.json
+"scripts": {
+    "dev:server": "nodemon --exec babel-node init.js --delay 2",
+    "dev:assets": "cross-env WEBPACK_ENV=development webpack -w",   // -w 명령을 추가한다.
+    "build:assets": "cross-env WEBPACK_ENV=production webpack"
+  },
+```
+- -w 를 추가하면 watch 모드가 실행되고, 이후에는 파일이 저장될 때마다 자동으로 webpack이 재실행된다.
+
+- wetube 페이지에서 static 파일을 사용하기 위해 main.pug 파일을 수정한다.
+
+```pug
+//- main.pug
+doctype html
+html
+  head
+    link(rel="stylesheet", href="https://use.fontawesome.com/releases/v5.6.3/css/all.css", integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/", crossorigin="anonymous")
+    title #{pageTitle} | #{siteName}
+    link(rel="stylesheet", href="/static/styles.css")   
+    //- styles.css 파일을 불러온다.
+  body
+    include ../partials/header
+    main
+          block content
+    include ../partials/footer
+    script(src="/static/main.js")
+    //- main.js 파일을 불러온다.
+```
+- styles.css와 main.js 파일을 불러왔다.
+
+```js
+// app.js
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            __code skip__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+app.use(helmet());
+app.set("view engine", "pug");
+app.use("/uploads", express.static("uploads"));
+app.use("/static", express.static("static"));       // /static router를 추가한다.
+app.use(cookieParser());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(morgan("dev"));
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            __code skip__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+```
+- /static route가 없으므로 추가한다.
+- /static router를 추가하지 않으면 static 파일을 불러올 수 없다.
+
+`npm run dev:server`
+
+`npm run dev:assets`
+- 두 개의 터미널에서 서버와 webpack을 실행시키고 wetube 페이지를 확인하면 배경색이 빨간색으로 변경된 것을 확인할 수 있다.
+- 파일들이 잘 연결된 것이다.
+- 하지만 개발자도구의 console창을 확인하면 'regeneratorRuntime is not defined' 에러가 발생한 것을 볼 수 있다.
+- 이 에러가 발생하는 이유는 크롬 브라우저가 async 함수를 어떻게 처리하는지 모르기 때문이다.
+- babel 그 자체로는 es6의 새로운 객체와 메소드를 사용할 수 없다. es6에서 처음 생겼기 때문에 구형 자바스크립트에는 그에 상응하는 코드가 없다.
+- 그래서 babel-polyfill을 설치해야 한다.
+
+`npm install @babel/polyfill`
+- babel-polyfill을 설치한다.
+
+```js
+// webpack.config.js
+entry: ["@babel/polyfill", ENTRY_FILE],     // entry에 babel-polyfill을 추가한다.
+```
+- entry에 babel-polyfill을 추가하고, 다시 wetube 페이지에서 console 창을 확인하면 에러가 없어진다.
+- 마지막으로 .gitignore에 static을 추가한다.
+
+## #5 Styling
+### #5.0 SCSS and Marking the Header
+```scss
+// _variables.scss
+$red: #ea232c;
+$dark-red: #bb2f2a;
+$grey: #f5f5f5;
+$black: #444444;
+$dark-grey: #e7e7e7;
+```
+- youtube용 컬러 코드를 넣어준다.
+- scss/config 폴더에 reset.scss 파일을 추가하고 내용도 추가한다.
+
+```scss
+// main.scss
+html,
+body {
+  height: 100%;
+}
+body {
+  background-color: $grey;
+  color: $black;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 14px;
+}
+
+main {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 70vh;     // min-height를 지정한 것은 footer가 페이지 중간쯤 위치하는 일을 방지하기 위해서이다.
+}
+```
+- scss 폴더에 main.scss 파일을 생성하고 내용을 추가한다.
+
+```scss
+// styles.scss
+@import "config/variables";     // 실제 파일명은 _varibales.scss 이다.
+@import "config/reset.scss";
+@import "main.scss";
+```
+- styles.scss 에는 scss 파일을 모두 import 했다.
+- import에는 표시되지 않지만 _variables.scss 에만 언더바( _ )를 붙인 이유는 오직 sass 파일에만 붙이는 용도로 사용하기 때문이다.
+- 그렇기 때문에 _variables.scss 는 컴파일이 될 필요가 없으며, 언더바( _ )를 붙인 외부 파일은 컴파일 대상에서 제외가 되는 것이다.
+- header 스타일링을 하기 전에 몇 가지 폴더와 파일을 만들자.
+
+`/assets/scss/pages/home.scss`
+- pages 폴더에 home.scss 파일을 생성한다.
+
+`/assets/scss/partials/header.scss`
+- partials 폴더에 header.scss 파일을 생성한다.
+
+```scss
+// styles.scss
+@import "partials/header.scss";     // header.scss 도 import 한다.
+```
+- styles.scss 에 header.scss 파일도 import 한다.
+- 이제 header 를 꾸며준다.
+
+```scss
+// header.scss
+.header {
+  background-color: $red;
+  margin-bottom: 50px;
+  .header__wrapper {
+    padding: 5px 0px;
+    width: 100%;
+    margin: 0 auto;
+    max-width: 1200px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: center;
+    .header__column {
+      i {
+        color: white;
+        font-size: 40px;
+      }
+      &:nth-child(2) {
+        width: 100%;
+        justify-self: center;
+      }
+      &:last-child {
+        justify-self: end;
+      }
+      ul {
+        display: flex;
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+        li:not(:last-child) {
+          margin-right: 15px;
+        }
+      }
+      form {
+        width: 100%;
+        input {
+          padding: 7px 10px;
+          width: 100%;
+          border-radius: 5px;
+          font-size: 14px;
+          color: $black;
+          font-weight: 600;
+          &::placeholder {
+            font-weight: 300;
+            color: rgba(0, 0, 0, 0.7);
+          }
+        }
+      }
+    }
+  }
+}
+```
