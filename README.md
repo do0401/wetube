@@ -2432,3 +2432,124 @@ main {
 @import "partials/footer.scss";
 ```
 - styles.scss 에 footer.scss 파일도 import 한다.
+- footer.scss 코드는 아래와 같다.
+```scss
+// footer.scss
+.footer {
+  margin: 50px 0;
+  padding-top: 50px;
+  border-top: 3px solid rgba(0, 0, 0, 0.1);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .footer__icon {
+    color: rgba(0, 0, 0, 0.2);
+    font-size: 40px;
+    margin-bottom: 20px;
+  }
+
+  .footer__text {
+    color: rgba(0, 0, 0, 0.2);
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+}
+```
+
+- 참고로 현재 nodemon 은 scss를 저장할 때마다 서버를 재시작한다.
+- scss를 저장할 때마다 서버를 재시작할 필요는 없으므로 이를 무시하도록 설정한다.
+```json
+// pakage.json
+"dev:server": "nodemon --exec babel-node init.js --delay 2 --ignore 'scss'",
+// --ignore 'scss' 를 추가한다.
+```
+
+`/assets/scss/partials/form.scss`
+- partials 폴더에 form.scss 파일을 생성한다.
+
+```scss
+// styles.scss
+@import "partials/form.scss";
+```
+- styles.scss 에 form.scss 파일을 import 한다.
+- form.scss 코드는 아래와 같다.
+```scss
+// form.scss
+.form-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  form {
+    width: 100%;
+    max-width: 320px;
+    margin-bottom: 50px;
+
+    input {
+      display: block;
+      width: 100%;
+      padding-top: 10px;
+      padding-bottom: 10px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+
+      &:not(:last-child) {
+        margin-bottom: 25px;
+      }
+    }
+
+    input[type="submit"] {
+      background-color: #3498db;
+      color: white;
+    }
+  }
+}
+```
+
+`/assets/scss/partials/socialLogin.scss`
+- partials 폴더에 socialLogin.scss 파일을 생성한다.
+
+```scss
+// styles.scss
+@import "partials/socialLogin.scss";
+```
+- styles.scss 에 socialLogin.scss 파일을 import 한다.
+- socialLogin.scss 코드는 아래와 같다.
+```scss
+// socialLogin.scss
+.social-login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+
+  button {
+    width: 100%;
+    max-width: 320px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    &:not(:last-child) {
+      margin-bottom: 15px;
+    }
+
+    span {
+      margin-right: 10px;
+      font-size: 20px;
+    }
+  }
+
+  .social-login--github {
+    background-color: $black;
+    color: white;
+  }
+
+  .social-login--facebook {
+    background-color: #3a5998;
+    color: white;
+  }
+}
+```
