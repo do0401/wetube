@@ -2410,3 +2410,25 @@ main {
   }
 }
 ```
+
+## `12일차`
+### #5.1 Footer and Login / Join
+- footer와 Login / Join 의 form 을 작업해보자.
+
+```js
+// middlewares.js
+  res.locals.user = {
+    isAuthenticated: false,     // false로 변경한다.
+    id: 1
+  };
+```
+- 먼저 middlewares.js 에서 페이지 상태를 login이 안된 상태로 변경한다.
+
+`/assets/scss/partials/footer.scss`
+- partials 폴더에 footer.scss 파일을 생성한다.
+
+```scss
+// styles.scss
+@import "partials/footer.scss";
+```
+- styles.scss 에 footer.scss 파일도 import 한다.
