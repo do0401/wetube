@@ -2553,3 +2553,7 @@ main {
   }
 }
 ```
+
+## `13일차`
+### #5.2 Everything else!
+- videoDetail 과 home 화면을 작업해보자.
