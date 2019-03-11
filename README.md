@@ -2577,4 +2577,38 @@ app.post("/login",  // '/login'으로 post를 시키면
         res.redirect('/user/' + req.user.username); // passport는 멋지게도, 직접 req.user를 만들어준다. 이것이 바로 현재 로그인한 사용자가 된다.
     });
 ```
-- 
+- 또 하나의 멋진 모듈이 있다. passport-local-mongoose 라는 사용자 기능(user functionality)을 추가하는 모듈이다.
+- 이 모듈은 기본적인 사용자 인증에 필요한 것들을 만들어준다.
+- 다음 강의로 넘어가기 전에 models 폴더에 User.js 파일을 생성하자.
+
+## `15일차`
+### #6.1 Local Authentication with Passport part One
+- 이제 User 라는 model을 생성할 것이다. User 에는 이름이나 이메일같은 몇 가지 field를 가질 것이다.
+- 먼저 mongoose 를 import 한다.
+
+```js
+import mongoose from "mongoose";
+
+const UserSchema = new mongoose.Schema({    // UserSchema를 생성한다.
+  name: String,         // 이름
+  email: String,        // 이메일
+  avatarUrl: String,    // avatar URL은 fileUrl과 똑같이 동작한다.
+  facebookId: Number,   // fascebook 계정 ID
+  githubId: Number      // github 계정 ID
+});
+
+const model = mongoose.Model("User", UserSchema);   // model 이름은 User이고 UserSchema로부터 온다.
+
+export default model;
+```
+- UserSchema에 소셜 계정을 위한 ID를 저장한다. 페이스북 계정으로 로그인하면 페이스북 ID를 저장하고, github 계정으로 로그인하면 github ID를 저장한다.
+- 그리고 나중에는 이 모든 것을 하나의 사용자로 묶어줄 수 있게 된다.
+- 예를 들어, 이메일을 써서 로그인하려고 하는데, 알고 보니 github 계정으로도 가입되어 있는 것이 확인되면 이를 알려준다.
+- 또한 이메일을 입력했는데 입력한 이메일을 가진 github ID가 있는게 확인되면, 계정에 패스워드가 없으니 패스워드를 만들어서 소셜 계정을 이용하거나 이메일을 이용해서 로그인하라고 알려줄 수도 있다.
+- avatar Url은 서버로부터의 url 일 수도 있고 github으로부터의 url이 될 수도 있다.
+
+```js
+// init.js
+import "./models/User"; // User를 import 한다.
+```
+- init.js에 User를 import 한다.
