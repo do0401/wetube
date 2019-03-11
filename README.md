@@ -2557,3 +2557,24 @@ main {
 ## `13일차`
 ### #5.2 Everything else!
 - videoDetail 과 home 화면을 작업해보자.
+
+## `14일차`
+### #6.0 Introduction to PassportJS
+
+- 이제 인증(authentication) 기능을 위해 Passport를 사용한다.
+- Passport는 미들웨이이며, 사용자 인증을 구현시켜준다.
+- 브라우저 상에 쿠키(cookies)를 설정해주면 그 쿠키를 통해서 사용자 ID 등을 알 수 있고, Passport가 브라우저에서 자동으로 쿠키를 가져와서 (인증이 완료된) User object를 controller에 넘겨준다.
+- Passport는 쿠키를 생성하고, 브라우저에 저장시켜주고, 유저에게 해당 쿠키를 준다.
+- Passport를 통합(integration)시키는 것은 아래와 같이 하면 된다.
+
+```js
+app.post("/login",  // '/login'으로 post를 시키면
+    passport.authenticate("local"), // passport.authenticate를 호출한다.
+                                    // "local"은 Strategy(전략)라고 불리며, 'facebook', 'github' 같은 Strategy를 쓸 수 있다.
+    function(req, res) {
+        // If this function gets called, authentication was successful.
+        // `req.user` contains the authenticated user.
+        res.redirect('/user/' + req.user.username); // passport는 멋지게도, 직접 req.user를 만들어준다. 이것이 바로 현재 로그인한 사용자가 된다.
+    });
+```
+- 
