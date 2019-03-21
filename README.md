@@ -2612,3 +2612,37 @@ export default model;
 import "./models/User"; // User를 import 한다.
 ```
 - init.js에 User를 import 한다.
+- 이제 passport를 이용해서 사용자 인증을 가능하게 해줄 것이다.
+
+`npm install passport-local-mongoose`
+- passport-local-mongoose를 설치한다.
+
+```js
+// User.js
+import passportLocalMongoose from "passport-local-mongoose";
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            __code skip__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+UserSchema.plugin(passportLocalMongoose, { usernameField: 'email });
+```
+- User.js에 passport-local-mongoose를 import해준다.
+- 그리고 Schema를 추가해준다. plugin으로 passportLocalMongoose를 사용한다.
+- passportLocalMongoose는 configuration object(설정 객체)가 필요하다.
+- 우리는 usernameField라는 옵션을 사용할 것이다. username으로는 email을 사용할 것이고 usernameField는 email 인증을 담당해줄 것이다.
+- 하지만 아직 인증에 관해서는 아무것도 한 것이 없다.
+- passport.js 라는 파일을 하나 생성한다. 
+
+`npm install passport-local`
+- passport-local을 설치한다. 
+- passport-local이란 username과 passport 를 쓰는 사용자 인증 방식(strategy)를 의미한다.
+
+```js
+// passport.js
+import passport from "passport";    // passport를 import 한다.
+import user from "./models/User";   // user 도 import 한다.
+
+passport.use(User.createStrategy()); // passport야, strategy를 하나 사용해! 
+```
+- strategy는 로그인을 하는 방식이다.
+- 예를 들어, 페이스북이나 github으로 로그인하는 것 처럼.
+- 원하는 만큼 strategy를 사용할 수 있다.
