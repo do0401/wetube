@@ -2597,7 +2597,7 @@ const UserSchema = new mongoose.Schema({    // UserSchema를 생성한다.
   githubId: Number      // github 계정 ID
 });
 
-const model = mongoose.Model("User", UserSchema);   // model 이름은 User이고 UserSchema로부터 온다.
+const model = mongoose.model("User", UserSchema);   // model 이름은 User이고 UserSchema로부터 온다.
 
 export default model;
 ```
@@ -2646,3 +2646,68 @@ passport.use(User.createStrategy()); // passport야, strategy를 하나 사용�
 - strategy는 로그인을 하는 방식이다.
 - 예를 들어, 페이스북이나 github으로 로그인하는 것 처럼.
 - 원하는 만큼 strategy를 사용할 수 있다.
+
+## `16일차`
+### #6.2 Local Authentication with Passport part Two
+
+- serialization은 어떤 정보를 쿠키에게 주느냐를 의미한다.
+- 즉, 어떤 field가 쿠키에 포함될 것인지를 알려주는 역할을 하는 것이다.
+- 하지만 쿠키에 너무 많은 정보를 담으면 안된다. 쿠키는 작아야 하고, 민감한 정보는 절대로 담으면 안된다.
+- deserializeUser는 serializeUser에서 받아온 쿠키의 정보를 어떻게 사용자로 전환하는가를 의미한다.
+- 하지만 우리는 passport-local-mongoose를 사용하므로 위 두가지 절차를 따로 해줄 필요가 없다.
+
+```js
+// passport.js
+import passport from "passport";
+import user from "./models/User";
+
+passport.use(User.createStrategy());
+
+passport.serializeUser(User.serializeUser());       // serialize
+passport.deserializeUser(USer.deserializeUser());   // deserialize
+```
+- 단순히 위 두가지 코드를 추가하면 끝이다.
+- 이제 globalRouter에 있는 postJoin을 수정한다. 패스워드가 맞는지 체크하거나 하는 미들웨어가 들어갈 것이다.
+- postJoin 코드가 있는 userController.js 를 수정한다.
+
+```js
+// userController.js
+import User from "../models/User";
+
+export const postJoin = async (req, res) => {   // async 추가
+  const {
+    body: {
+      name,
+      email,
+      password,
+      password2
+    }
+  } = req;
+  if (password !== password2) {
+    res.status(400);
+    res.render("join", {
+      pageTitle: "Join"
+    });
+  } else {
+    try {       // try catch를 사용해서 error를 표시하도록 한다.
+      const user = await User({ // User.create 대신 User만 사용한 이유는 create는 생성시키고 db에 저장까지 하기 때문이다. User는 이미 db에 저장되어 있다.
+        name,   // 사용자를 생성하기 위해서 name과 email을 넣도록 한다.
+        email   // 즉, 계정이 생성되면 name과 email을 등록시킨다.
+      });
+      await User.register(user, password);  // user와 password만으로 사용자를 등록하도록 한다.
+    } catch (error) {
+      console.log(error);
+    }
+    // To Do: Log user in
+    res.redirect(routes.home);
+  }
+  res.render("join", {
+    pageTitle: "Join"
+  });
+};
+```
+- 위와 같이 postJoin을 수정하고 join 페이지로 이동해서 가입을 하면 home 화면으로 이동한다.
+- terminal에서 mongo -> user we-tube -> db.users.find({}) 를 해보면 등록한 계정을 볼 수 있다.
+- 하지만 아직 이 사용자를 로그인 시켜주지는 않았다. 우리는 사용자를 등록하고 자동으로 로그인 시켜주도록 할 것이다.
+
+### #6.3 Loggin the User in
