@@ -3094,3 +3094,13 @@ app.use(passport.session()); // 위에서 실행된 cookieParser로부터 쿠키
 ```
 
 - passport는 쿠키로 찾은 사용자를 req의 object, 즉 req.user로 만들어준다.
+- 추가로 app.js에 passport 파일을 import 해야 한다.
+
+```js
+// app.js
+import "./passport";
+```
+
+- 이제 wetube Join 화면으로 이동해서 정보를 입력하고 join을 해본다.
+- 개발자 도구 application에 cookies에 보면 아직 쿠키가 생성되지 않았다.
+- express-session을 설치하지 않았기 때문이다. 하지만 인증하기, 가입하기, 로그인하기는 잘 구현되었다.
