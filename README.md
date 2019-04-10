@@ -2932,9 +2932,9 @@ UserSchema.plugin(passportLocalMongoose, { usernameField: 'email });
 - 하지만 아직 인증에 관해서는 아무것도 한 것이 없다.
 - passport.js 라는 파일을 하나 생성한다.
 
-`npm install passport-local`
+`npm install passport passport-local`
 
-- passport-local을 설치한다.
+- passport와 passport-local을 설치한다.
 - passport-local이란 username과 passport 를 쓰는 사용자 인증 방식(strategy)를 의미한다.
 
 ```js
@@ -3076,3 +3076,21 @@ export const localMiddleware = (req, res, next) => {
 
 - res.locals.user를 req.user라고 한 이유는, passport가 사용자를 로그인 시킬 때, passport는 쿠키나 serialize, deserialize 등의 기능을 다 지원해줌은 물론이고, user가 담긴 object를 req 에도 올려줄 것이기 때문이다.
 - 이렇게 작성해야 우리 template들이 이 user에 접근 가능하게 할 수 있다.
+- 그리고 app.js로 가서 passport를 import 하고 use 해야 한다.
+
+```js
+// app.js
+import passport from "passport";
+
+app.use(bodyParser.json());
+app.use(
+  bodyParser.urlencoded({
+    extended: true
+  })
+);
+app.use(morgan("dev"));
+app.use(passport.initialize()); // passport를 초기화한다.
+app.use(passport.session()); // 위에서 실행된 cookieParser로부터 쿠키가 내려와서 그 쿠키 정보에 해당하는 사용자를 찾아준다.
+```
+
+- passport는 쿠키로 찾은 사용자를 req의 object, 즉 req.user로 만들어준다.
