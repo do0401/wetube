@@ -3115,17 +3115,19 @@ import "./passport";
 
 ```js
 // app.js
-import session from "express-session";  // session 을 import 한다.
+import session from "express-session"; // session 을 import 한다.
 
 app.use(
   session({
     secret: process.env.COOKIE_SECRET
-  }));
+  })
+);
 
 // .env
-COOKIE_SECRET="NPlrCGA7R2rP7uBUgnRHfFraGMJA9VwG"  // 랜덤 문자열은 randomkeygen.com에서 가져왔다.
+COOKIE_SECRET = "NPlrCGA7R2rP7uBUgnRHfFraGMJA9VwG"; // 랜덤 문자열은 randomkeygen.com에서 가져왔다.
 ```
-- session을 import 하고 app.use(passport.initialize()); 위 쪽에 
+
+- session을 import 하고 app.use(passport.initialize()); 위 쪽에
 - session을 사용할 때 우리가 고려해야 되는 옵션들이 있다.
 - 예를 들어, 원한다면 쿠키나 도메인을 원하는 대로 바꿔줄 수도 있다. 유효기간이라든지 등등..
 - 하지만 우리는 아무 것도 바꾸지 않은 상태로 둘 것이다.
