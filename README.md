@@ -3104,3 +3104,34 @@ import "./passport";
 - 이제 wetube Join 화면으로 이동해서 정보를 입력하고 join을 해본다.
 - 개발자 도구 application에 cookies에 보면 아직 쿠키가 생성되지 않았다.
 - express-session을 설치하지 않았기 때문이다. 하지만 인증하기, 가입하기, 로그인하기는 잘 구현되었다.
+
+## `18일차`
+
+### #6.4 Session on Express
+
+`npm install express-session`
+
+- express-session을 설치한다.
+
+```js
+// app.js
+import session from "express-session";  // session 을 import 한다.
+
+app.use(
+  session({
+    secret: process.env.COOKIE_SECRET
+  }));
+
+// .env
+COOKIE_SECRET="NPlrCGA7R2rP7uBUgnRHfFraGMJA9VwG"  // 랜덤 문자열은 randomkeygen.com에서 가져왔다.
+```
+- session을 import 하고 app.use(passport.initialize()); 위 쪽에 
+- session을 사용할 때 우리가 고려해야 되는 옵션들이 있다.
+- 예를 들어, 원한다면 쿠키나 도메인을 원하는 대로 바꿔줄 수도 있다. 유효기간이라든지 등등..
+- 하지만 우리는 아무 것도 바꾸지 않은 상태로 둘 것이다.
+- 그리고 secret 이라는 매우 중요한 옵션이 있다.
+- secret 이란, 무작위 문자열로서, 쿠키에 들어있는 sessison ID를 암호화하기 위한 것이다.
+- 예를 들어, session ID를 전송할 때, 실제로 그 ID 값 그대로를 보내는 것이 아니고 실제로는 암호화된 상태로 보낸다.
+- secret 은 필수 옵션이다.
+- 랜덤한 문자열은 randomkeygen.com 에서 얻을 수 있다.
+- 그리고 그 문자열을 다른 사람들이 볼 수 없도록 .env에 추가했다.

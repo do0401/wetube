@@ -4,6 +4,7 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import passport from "passport";
+import session from "express-session";
 import {
   localMiddleware
 } from "./middlewares";
@@ -26,6 +27,10 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 app.use(morgan("dev"));
+app.use(
+  session({
+    secret: process.env.COOKIE_SECRET
+  }));
 app.use(passport.initialize());
 app.use(passport.session());
 
