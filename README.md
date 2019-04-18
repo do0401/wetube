@@ -3119,8 +3119,10 @@ import session from "express-session"; // session 을 import 한다.
 
 app.use(
   session({
-    secret: process.env.COOKIE_SECRET
-  })
+    secret: process.env.COOKIE_SECRET, // session id 암호화
+    resave: true, // session 을 강제로 저장하게 함
+    saveUninitialized: false // 초기화되지 않은 session을 저장소에 저장함
+  }) // 로그인 session에 이용 시 false가 유용함
 );
 
 // .env
@@ -3132,8 +3134,43 @@ COOKIE_SECRET = "NPlrCGA7R2rP7uBUgnRHfFraGMJA9VwG"; // 랜덤 문자열은 rando
 - 예를 들어, 원한다면 쿠키나 도메인을 원하는 대로 바꿔줄 수도 있다. 유효기간이라든지 등등..
 - 하지만 우리는 아무 것도 바꾸지 않은 상태로 둘 것이다.
 - 그리고 secret 이라는 매우 중요한 옵션이 있다.
-- secret 이란, 무작위 문자열로서, 쿠키에 들어있는 sessison ID를 암호화하기 위한 것이다.
+- secret 이란, 무작위 문자열로서, 쿠키에 들어있는 session ID를 암호화하기 위한 것이다.
 - 예를 들어, session ID를 전송할 때, 실제로 그 ID 값 그대로를 보내는 것이 아니고 실제로는 암호화된 상태로 보낸다.
 - secret 은 필수 옵션이다.
 - 랜덤한 문자열은 randomkeygen.com 에서 얻을 수 있다.
 - 그리고 그 문자열을 다른 사람들이 볼 수 없도록 .env에 추가했다.
+
+- 이제 wetube 페이지로 가서 로그인을 하고 개발자 도구 > Application > Cookies에 가면 쿠키가 생성된 것을 확인할 수 있다.
+- 웹브라우저를 새로고침 할 때마다, 즉 이 쿠키 정보를 웹서버로 전송할 때마다 서버에서는 passport 인증 과정을 호출하고 passport는 deserialize를 통해 내가 어느 사용자인지 식별할 수 있게 된다.
+
+```pug
+//- header.pug
+.header__column
+      ul
+        if !user    // user.isAuthenticated 에서 isAuthenticated 를 삭제
+          li
+            a(href=routes.join) Join
+          li
+            a(href=routes.login) Log In
+```
+
+- header.pug 에서 임시로 사용했던 isAuthenticated를 삭제해준다.
+
+```js
+// middlewares.js
+export const localMiddleware = (req, res, next) => {
+  res.locals.siteName = "WeTube";
+  res.locals.routes = routes;
+  res.locals.user = req.user || {};
+  console.log(req.user); // req.user 를 출력한다.
+  next();
+};
+```
+
+- middlewares.js 에서 req.user를 출력하면 누가 무슨 요청을 하고 있는지 알 수 있다.
+- 이것이 가능한 이유는 쿠키가 있기 때문이다.
+- 쿠키는 express로 보내지고 있고, express는 session을 이용함으로써 쿠키를 얻을 수 있다.
+- 그리고 우리는 passport를 통해서 deserialize를 진행하여 쿠키를 해독한다.
+
+- 하지만 현재 한 가지 문제가 있다. 서버를 재시작하고 브라우저를 새로고침하면 로그인 상태가 아니게 된다.
+- 즉, 서버를 재시작하면 session이 사라져버린다. 우리는 session 정보, 쿠키 정보들을 메모리에 저장하고 있기 때문이다.
