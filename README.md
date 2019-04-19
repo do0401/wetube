@@ -3174,3 +3174,37 @@ export const localMiddleware = (req, res, next) => {
 
 - 하지만 현재 한 가지 문제가 있다. 서버를 재시작하고 브라우저를 새로고침하면 로그인 상태가 아니게 된다.
 - 즉, 서버를 재시작하면 session이 사라져버린다. 우리는 session 정보, 쿠키 정보들을 메모리에 저장하고 있기 때문이다.
+
+## `19일차`
+
+### #6.5 MongoStore and Middlewares
+
+- mongoDB를 사용해서 session을 저장할 것이다.
+- connect-mongo 를 설치하자.
+
+`npm install connect-mongo`
+
+- 그리고 connect-mongo를 import 한다.
+- session 저장소를 mongo와 연결시켜줘야 하며, 이 일은 mongoose가 하게 되므로 mongoose도 import 한다.
+
+```js
+// app.js
+import mongoose from "mongoose";
+import MongoStore from "connect-mongo";
+
+const CokieStore = MongoStore(session); // 쿠키저장소를 생성한다.
+
+app.use(
+  session({
+    secret: process.env.COOKIE_SECRET,
+    resave: true,
+    saveUninitialized: false,
+    store: new CokieStore({
+      // session 설정에서 store를 추가한다.
+      mongooseConnection: mongoose.connection // 쿠키저장소를 mongoDB와 연결시키며, 이는 mongoose가 담당한다.
+    })
+  })
+);
+```
+
+- 이제 js 파일을 수정하거나 해서 서버가 재시작된다해도 쿠키를 계속 보존할 수 있고, 사용자는 로그인 상태를 유지하게 될 것이다.
