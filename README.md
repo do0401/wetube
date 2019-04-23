@@ -3208,3 +3208,71 @@ app.use(
 ```
 
 - 이제 js 파일을 수정하거나 해서 서버가 재시작된다해도 쿠키를 계속 보존할 수 있고, 사용자는 로그인 상태를 유지하게 될 것이다.
+- wetube 페이지로 가서 가입 혹은 로그인 후 서버를 재시작하여 테스트한다. 서버를 재시작해도 여전히 로그인 상태인 것을 확인할 수 있다.
+- 이번에는 routes 의 출입을 제한하도록 할 것이다. 로그인된 사용자는 join 화면으로 접근이 불가능해야 한다.
+- onlyPublic (로그아웃 상태인 경우에만 접근을 허용하겠다는 의미) 이라는 middleware를 만든다.
+
+```js
+// middlewares.js
+export const onlyPublic = (req, res, next) => {
+  // onlyPubilc 미들웨어를 추가한다.
+  if (req.user) {
+    // req.user가 존재하면, 즉 사용자가 로그인 상태라면
+    res.redirect(routes.home); // home으로 리다이렉트 시키고 이후의 controller에는 접근하지 못하게 한다.
+  } else {
+    next(); // 사용자가 로그인 상태가 아니라면 next(); 를 실행한다.
+  }
+};
+
+// globalRouter.js
+import { onlyPublic } from "../middlewares";
+
+globalRouter.get(routes.join, onlyPublic, getJoin); // 사용자가 로그인 상태일 때
+globalRouter.post(routes.join, onlyPublic, postJoin, postLogin); // Join과 Login 화면을 보게 하고 싶지 않으므로
+
+globalRouter.get(routes.login, onlyPublic, getLogin); // onlyPublic 미들웨어를 추가한다.
+globalRouter.post(routes.login, onlyPublic, postLogin);
+
+globalRouter.get(routes.logout, onlyPublic, logout);
+```
+
+- globalRouter.js 에서 onlyPublic 미들웨어를 추가한다.
+- 기억해야 할 것은 passport와 session의 훌륭함 덕분에 req.user를 통해서 로그인된 사용자가 누구인지 알 수 있다는 것이다.
+- wetube 페이지에서 로그인 상태에서 /join 페이지 이동 시 home 으로 리다이렉트되는 것을 볼 수 있다.
+- 이번엔 onlyPrivate 미들웨어를 추가한다.
+
+```js
+// middlewares.js
+export const onlyPrivate = (req, res, next) => {
+  if (req.user) {
+    next();
+  } else {
+    res.redirect(routes.home);
+  }
+};
+
+// userRouter.js
+import { onlyPrivate } from "../middlewares";
+
+userRouter.get(routes.editProfile, onlyPrivate, editProfile);
+userRouter.get(routes.changePassword, onlyPrivate, changePassword);
+
+// videoRouter.js
+import { uploadVideo, onlyPrivate } from "../middlewares";
+
+// Upload
+videoRouter.get(routes.upload, onlyPrivate, getUpload);
+videoRouter.post(routes.upload, onlyPrivate, uploadVideo, postUpload);
+
+// Video Detail
+videoRouter.get(routes.videoDetail(), videoDetail);
+
+// Edit Video
+videoRouter.get(routes.editVideo(), onlyPrivate, getEditVideo);
+videoRouter.post(routes.editVideo(), onlyPrivate, postEditVideo);
+
+// Delete Video
+videoRouter.get(routes.deleteVideo(), onlyPrivate, deleteVideo);
+```
+
+- 그리고 userRouter.js와 videoRouter.js 에서 onlyPrivate 미들웨어를 추가한다.
