@@ -3276,3 +3276,22 @@ videoRouter.get(routes.deleteVideo(), onlyPrivate, deleteVideo);
 ```
 
 - 그리고 userRouter.js와 videoRouter.js 에서 onlyPrivate 미들웨어를 추가한다.
+
+## `20일차`
+
+### #6.6 Github Log In Part One
+
+- passport document로 가서 Strategy에서 github을 검색한다.
+- 우리는 passport-github을 쓸 것이다. 설치한다.
+
+`npm install passport-github`
+
+- passport-github을 사용하려면 github에서 application을 등록하고, strategy 설정도 해야한다.
+- 'https://github.com/settings/applications/new' 로 이동해서 application을 생성한다.
+
+```text
+Application name : WeTube
+Homepage URL : https://localhost:4000/
+Application description : description
+Authorization callback URL : https://localhost:4000/auth/github/callback
+```
