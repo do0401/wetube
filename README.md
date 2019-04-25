@@ -3293,5 +3293,56 @@ videoRouter.get(routes.deleteVideo(), onlyPrivate, deleteVideo);
 Application name : WeTube
 Homepage URL : https://localhost:4000/
 Application description : description
-Authorization callback URL : https://localhost:4000/auth/github/callback
+Authorization callback URL : https://localhost:4000/auth/github/callback  -> url은 적고싶은대로 적어도 된다.
 ```
+
+- passport.js 에서 github strategy(깃헙 로그인)을 가져오게 한다.
+
+```js
+// passport.js
+import GithubStrategy from "passport-github";
+```
+
+- 그리고 사용(use)하라고 해야하는데 그 전에 등록했던 github application(settings / developer settings) 페이지로 이동해서 Client ID와 Client Secret 을 확인한다.
+- 이 정보는 환경 변수(.env)에 넣어놓자. 왜냐하면 이러한 비밀 정보는 다른 사람과 공유해서는 안되기 때문이다.(절대!)
+
+```env
+GH_ID=어플리케이션 ID 정보
+GH_SECRET=어플리케이션 secret 정보
+```
+
+- 환경 변수를 저장했으면 이제 github strategy를 사용한다.
+
+```js
+// passport.js
+passport.use(
+  new GithubStrategy({
+    clientID: process.env.GH_ID,
+    clientSecret: process.env.GH_SECRET,
+    callbackURL: "https://localhost:4000/auth/github/callback"
+  })
+);
+```
+
+- 그 다음으로 해야할 것은 사용자가 깃헙에서 돌아왔을 때 실행되는 함수를 작성하는 것이다.
+- 예를 들어, 사용자가 깃헙으로 갔다가 돌아오면서 사용자 정보를 가져오면, 이 함수가 실행되는 것이다.
+- 이 함수는 controller에 작성하도록 한다.
+
+```js
+// userController.js
+export const githubLoginCallback = (accessToken, refreshToken, profile, cb) => {
+  console.log(accessToken, refreshToken, profile, cb);
+};
+
+export const logout = (req, res) => {
+  // logout 윗쪽에 작성한다.
+  req.logout(); // 이것도 추가로 작성해줬다.(겸사겸사)
+  res.redirect(routes.home);
+};
+```
+
+- cb(콜백 함수)는 passport로부터 우리에게 제공되는 것이다.
+- 이 함수가 실행되면 passport에게 사용자가 성공적으로 로그인되었다고 말해줄 것이다.
+- 하지만 일단 우리는 아무 것도 하지 않고, console.log로 출력만 해본다.
+- 이 과정은 깃헙에서 돌아오는 과정을 작성한 것이고, 깃헙으로 보내는 과정은 아무 것도 작성하지 않았다.
+- 그래서 userController에서 하나를 더 생성한다. 이것은 다음 강의에서 계속 하도록 하자.
