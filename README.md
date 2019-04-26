@@ -3346,3 +3346,76 @@ export const logout = (req, res) => {
 - 하지만 일단 우리는 아무 것도 하지 않고, console.log로 출력만 해본다.
 - 이 과정은 깃헙에서 돌아오는 과정을 작성한 것이고, 깃헙으로 보내는 과정은 아무 것도 작성하지 않았다.
 - 그래서 userController에서 하나를 더 생성한다. 이것은 다음 강의에서 계속 하도록 하자.
+
+## `21일차`
+
+### #6.7 Github Log In Part Two
+
+- /auth/github으로 오면 passport 인증을 시키도록 route를 만든다.
+- 또한 /auth/github/callback으로 오면 위에서 만든 콜백 함수로 처리한다.
+
+```js
+// routes.js
+// Github
+const GITHUB = "/auth/github";                    // github을 위한 routes를 만든다.
+const GITHUB_CALLBACK = "/auth/github/callback";
+
+const routes = {
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            __code skip__
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  gitHub: GITHUB,
+  githubCallback: GITHUB_CALLBACK
+
+// passport.js
+import passport from "passport";
+import GithubStrategy from "passport-github";
+import User from "./models/User";
+import { githubLoginCallback } from "./controllers/userController";   // controller를 import 한다.
+import routes from "./routes";                                        // routes를 import 한다.
+
+passport.use(User.createStrategy());
+
+passport.use(
+  new GithubStrategy({
+    clientID: process.env.GH_ID,
+    clientSecret: process.env.GH_SECRET,
+    callbackURL: `https://localhost:4000${routes.githubCallback}` // 콜백 함수 경로를 routes를 이용해서 바꿔준다.
+  }),
+  githubLoginCallback
+  );
+};
+
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+// globalRouter.js
+globalRouter.get(routes.gitHub, githubLogin);   // /auth/github으로 들어가면 githubLogin을 써서 인증한다.
+globalRouter.get(
+  routes.githubCallback,
+  passport.authenticate("github", { failureRedirect: "/login" }),
+  postGithubLogIn
+);
+
+// socialLogin.pug
+.social-login
+  button.social-login--github
+    a(href=routes.gitHub)     // 링크를 넣어준다. gitHub으로 가는 링크다.
+      span
+            i.fab.fa-github
+      | Continue with Github
+  button.social-login--facebook
+    span
+          i.fab.fa-facebook
+    | Continue with Facebook
+```
+
+- routes를 등록했고, passport.js에서 callbackURL을 routes 경로로 수정했고, globalRouter에 router를 추가했다. 마지막으로 socialLogin.pug에 gitHub으로 가는 링크를 넣었다.
+- 정리하면, 누군가 gitHub 링크를 눌러서 gitHub으로 가면, globalRouter.js 에서 githubLogin을 실행시킨다.
+- userController.js 에 있는 githubLogin 함수는 passport.authenticate("github") 을 실행시킨다.
+- 그렇게 되면 우리는 passport의 strategy를 이용하게 되는 것이다.
+- 깃헙 페이지로 갔다가 돌아올 때, callbackURL로 돌아오면서, 우리는 사용자 정보를 얻게 될 것이다.
+- 그래서 어떤 사용자가 callback URL로 접근했다면, globalRouter.js 에서 passport.authenticate()를 실행시킨다.
+- 즉, passport.js 에 있는 githubLoginCallback 함수를 실행하는 것이다.
+- 로그인이 성공적이고 이 함수가 문제없이 결과를 리턴하면 postGithubLogIn을 실행하는데, postGithubLogIn(userController.js)은 사용자를 home 화면으로 보내줄 것이다.
