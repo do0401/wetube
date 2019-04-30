@@ -3233,7 +3233,7 @@ globalRouter.post(routes.join, onlyPublic, postJoin, postLogin); // Join과 Logi
 globalRouter.get(routes.login, onlyPublic, getLogin); // onlyPublic 미들웨어를 추가한다.
 globalRouter.post(routes.login, onlyPublic, postLogin);
 
-globalRouter.get(routes.logout, onlyPublic, logout);
+globalRouter.get(routes.logout, onlyPrivate, logout);
 ```
 
 - globalRouter.js 에서 onlyPublic 미들웨어를 추가한다.
@@ -3382,8 +3382,9 @@ passport.use(
     clientID: process.env.GH_ID,
     clientSecret: process.env.GH_SECRET,
     callbackURL: `https://localhost:4000${routes.githubCallback}` // 콜백 함수 경로를 routes를 이용해서 바꿔준다.
-  }),
-  githubLoginCallback
+    },
+    githubLoginCallback
+  )
   );
 };
 
@@ -3419,3 +3420,5 @@ globalRouter.get(
 - 그래서 어떤 사용자가 callback URL로 접근했다면, globalRouter.js 에서 passport.authenticate()를 실행시킨다.
 - 즉, passport.js 에 있는 githubLoginCallback 함수를 실행하는 것이다.
 - 로그인이 성공적이고 이 함수가 문제없이 결과를 리턴하면 postGithubLogIn을 실행하는데, postGithubLogIn(userController.js)은 사용자를 home 화면으로 보내줄 것이다.
+- wetube 페이지로 돌아가서 join > github 버튼을 눌러 깃헙 로그인을 시도해보자.
+- 터미널에서 다양한 정보를 확인할 수 있다.
