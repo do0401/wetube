@@ -3422,3 +3422,29 @@ globalRouter.get(
 - 로그인이 성공적이고 이 함수가 문제없이 결과를 리턴하면 postGithubLogIn을 실행하는데, postGithubLogIn(userController.js)은 사용자를 home 화면으로 보내줄 것이다.
 - wetube 페이지로 돌아가서 join > github 버튼을 눌러 깃헙 로그인을 시도해보자.
 - 터미널에서 다양한 정보를 확인할 수 있다.
+
+## `22일차`
+
+### #6.8 Github Log In Part Three
+
+- githubLoginCallback 함수를 작성하자.
+- 우리에게 중요한 것은 github ID, 이메일, 이름, 그리고 아바타(프로필 사진)이다.
+- 그리고 그러한 정보들은 profile._json 안에 있다. 그 정보들을 가져온다.
+
+```js
+// userController.js
+export const githubLoginCallback = async (_, __, profile, cb) => {  // parameter 중 사용하지 않는 것이 있을 때 언더바로 표시하면 좋다. 함수의 parameter는 순서가 중요하기 때문이다.
+  const { _json: { id, avatar_url, name, email } } = profile;
+  try {
+    const user = await User.findOne({email});
+    console.log(user);      // user를 출력하면 어떻게 되는지 확인한다.
+  } catch (error) {
+    return cb(error);       // cb 함수는 passport에서 제공된 callback 함수이다.
+  }
+};
+```
+- 일단 위와 같이 작성했다. 여기서 cb 함수는 passport에서 제공된 callback 함수이고, passport에서는 이 함수를 인증에 성공한 상황에서 호출을 하게 된다.
+- cb 함수를 호출할 때 error 없이 user를 넣어준다면 passport는 사용자를 찾았다고 알게 된다. 그러면 user ID를 쿠키에 넣어줄 것이고, username + password(local 방식) 인증할 때와 똑같은 것을 해줄 것이다.
+- 하지만 user 없이 error만 넣어서 cb 함수를 호출하면 passport는 우리가 사용자를 찾지 못한 것으로 알게 될 것이다.
+- 그러므로 위에서 catch 구문에 cb 함수에 error만 넣어서 호출한 것이다.
+- 다시 wetube 페이지로 가서 깃헙 join을 하면 터미널에 null이 출력될 것이다.
