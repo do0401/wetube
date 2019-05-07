@@ -3452,3 +3452,7 @@ export const githubLoginCallback = async (_, __, profile, cb) => {
 - 하지만 user 없이 error만 넣어서 cb 함수를 호출하면 passport는 우리가 사용자를 찾지 못한 것으로 알게 될 것이다.
 - 그러므로 위에서 catch 구문에 cb 함수에 error만 넣어서 호출한 것이다.
 - 다시 wetube 페이지로 가서 깃헙 join을 하면 터미널에 null이 출력될 것이다.
+
+- 이번에 할 작업은 어떤 사용자가 이메일로 가입을 한 뒤에 깃헙으로 로그인 하기를 클릭하면, 그 사용자를 로그인 시키는 것이다.
+- 깃헙 로그인 시 깃헙 로그인 아이디로 사용하는 이메일을 가진 사용자를 찾으면 githubId(user.githubId)를 깃헙에서 가져온 id를 할당할 것이다.
+- 만약 사용자를 찾지 못했다면, 계정을 하나 만들 것이다.

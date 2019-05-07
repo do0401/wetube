@@ -62,7 +62,12 @@ export const githubLoginCallback = async (_, __, profile, cb) => {
     const user = await User.findOne({
       email
     });
-    console.log(user);
+    if (user) {
+      user.githubId = id;
+      user.save();
+    } else {
+      const newUser
+    }
   } catch (error) {
     return cb(error);
   }
