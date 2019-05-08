@@ -65,16 +65,22 @@ export const githubLoginCallback = async (_, __, profile, cb) => {
     if (user) {
       user.githubId = id;
       user.save();
-    } else {
-      const newUser
+      return cb(null, user);
     }
+    const newUser = await User.create({
+      email,
+      name,
+      githubId: id,
+      avatarUrl: avatar_url
+    });
+    return cb(null, newUser);
   } catch (error) {
     return cb(error);
   }
 };
 
 export const postGithubLogIn = (req, res) => {
-  res.send(routes.home);
+  res.redirect(routes.home);
 };
 
 export const logout = (req, res) => {

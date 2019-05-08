@@ -3456,3 +3456,38 @@ export const githubLoginCallback = async (_, __, profile, cb) => {
 - 이번에 할 작업은 어떤 사용자가 이메일로 가입을 한 뒤에 깃헙으로 로그인 하기를 클릭하면, 그 사용자를 로그인 시키는 것이다.
 - 깃헙 로그인 시 깃헙 로그인 아이디로 사용하는 이메일을 가진 사용자를 찾으면 githubId(user.githubId)를 깃헙에서 가져온 id를 할당할 것이다.
 - 만약 사용자를 찾지 못했다면, 계정을 하나 만들 것이다.
+
+```js
+// userController.js
+export const githubLoginCallback = async (_, __, profile, cb) => {
+  const {
+    _json: { id, avatar_url, name, email }
+  } = profile;
+  try {
+    const user = await User.findOne({ email });
+    if (user) {
+      // 동일한 email을 가진 user가 있으면
+      user.githubId = id; // githubIdd에 _json에서 가져온 id를 할당한다.
+      user.save(); // 그리고 user 정보를 저장한다.
+      return cb(null, user); // cb 함수를 호출한다.
+    }
+    const newUser = await User.create({
+      // 만약 user를 찾지 못했다면 계정을 만든다.
+      email,
+      name,
+      githubId: id,
+      avatarUrl: avatar_url
+    });
+    return cb(null, newUser); // 마찬가지로 cb 함수를 호출한다.
+  } catch (error) {
+    return cb(error);
+  }
+};
+
+export const postGithubLogIn = (req, res) => {
+  res.redirect(routes.home); // send 를 redirect 로 수정한다.
+};
+```
+
+- 다시 한번 말하자면, cb 함수의 첫번째 매개변수는 error일 때를 나타내고, 두번째 매개변수는 성공했을 때를 나타낸다.
+- 이렇게 작성을 하고 wetube 페이지로 와서 github login을 해주면 정상적으로 로그인이 되고 home 화면으로 redirect 된다.
