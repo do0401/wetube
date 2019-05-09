@@ -53,7 +53,7 @@ export const githubLoginCallback = async (_, __, profile, cb) => {
   const {
     _json: {
       id,
-      avatar_url,
+      avatar_url: avatarUrl,
       name,
       email
     }
@@ -71,7 +71,7 @@ export const githubLoginCallback = async (_, __, profile, cb) => {
       email,
       name,
       githubId: id,
-      avatarUrl: avatar_url
+      avatarUrl
     });
     return cb(null, newUser);
   } catch (error) {

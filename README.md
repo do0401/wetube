@@ -3491,3 +3491,43 @@ export const postGithubLogIn = (req, res) => {
 
 - 다시 한번 말하자면, cb 함수의 첫번째 매개변수는 error일 때를 나타내고, 두번째 매개변수는 성공했을 때를 나타낸다.
 - 이렇게 작성을 하고 wetube 페이지로 와서 github login을 해주면 정상적으로 로그인이 되고 home 화면으로 redirect 된다.
+
+## `23일차`
+
+### #6.9 Recap and User Profile
+
+- profile 페이지를 만들기 전에 인증에 대해 정리해보자.
+- username과 password를 이용한 방식(local 방식)은 비교적 간단하다.
+- username과 password를 post 방식으로 전달하고, mongoose가 자동으로 체크한다.
+- password가 맞으면 맞다고 알리고 passport는 쿠키를 생성한다.
+- 깃헙 인증의 경우, 사용자는 깃헙 웹사이트로 이동하고 거기에서 권한 승인을 한다.
+- 그 이후에 깃헙 웹사이트는 우리에게 그 사용자의 정보를 보내주는데 /auth/github/callback 이라는 url로 오게 된다.
+- 그러면 passport가 우리가 만들어준 githubLoginCallback 함수를 호출한다.
+- 이 함수는 사용자의 profile 같은, 모든 정보를 받는다.
+- 이 정보로 email로 사용자를 찾거나 github ID로 사용자를 찾는 등의 기능을 할 수 있다.
+- githubLoginCallback 함수의 한가지 조건은 callback(cb) 함수를 return해야 한다는 것이다.
+- cb 함수를 실행시키면 그 함수에게는 error가 있는지, user는 있는지를 알려줘야 하고,
+  error가 존재하면 passport는 error가 있고 user는 없구나 하고 끝내버릴 것이다.
+- user가 존재하면 passport는 쿠키를 만들고 저장한다.
+- 그리고 마지막으로 postGithubLogin을 실행시켜서 home 화면으로 redirect 한다.
+
+```js
+// userController.js
+const {
+  _json: {
+    id,
+    avatar_url: avatarUrl, // avatar_url 을 avatarUrl(캐멀케이스)로 변경한다.
+    name,
+    email
+  }
+} = profile;
+
+const newUser = await User.create({
+  email,
+  name,
+  githubId: id,
+  avatarUrl // 이제 avatarUrl 만 입력해도 된다.
+});
+```
+
+- 이제 profile 페이지를 만들어 보자.
