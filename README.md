@@ -3531,3 +3531,58 @@ const newUser = await User.create({
 ```
 
 - 이제 profile 페이지를 만들어 보자.
+- 지금은 profile을 클릭하면 로그인한 사용자의 프로필로 가도록 되어 있다.
+- 먼저 userController.js 에 있는 userDetail 을 수정한다.
+- userDetail에서는 특정 id를 가진 사용자를 찾아야만 한다. 하지만 사실 그 사용자는 로그인되어 있는 상태다.
+- 그러므로 /users/\${id} 보다는 /users/me 로 하는 것이 좋을 것 같다.
+- me 라는 새로운 route를 만들자.
+
+```js
+// routes.js
+// Users
+const ME = "/me"; // ME를 추가한다.
+
+const routes = {
+
+  me: ME,
+```
+
+- 그리고 me 라는 controller도 만든다.
+
+```js
+// userController.js
+export const me = (req, res) => {
+  res.render("userDetail", { pageTitle: "User Detail", user: req.user });
+};
+```
+
+- me controller는 userDetail과 똑같은 일을 시킨다. 다른 점은 userDetail에서는 사용자를 찾는 과정이 필요한데, me에서는 user를 req.user로 전달할 것이다.(\*\*req.user는 현재 로그인 된 사용자다!)
+- 위와 같이 me route를 만드르고 me controller를 따로 만드는 것은 사용자마다 똑같은 user template을 사용할텐데 해당 id를 가진 사용자를 userDetail에서 찾도록 하는 것은 별로이기 때문이다.
+- 그리고 userDetail.pug를 꾸민다.
+
+```pug
+//- userDetail.pug
+block content
+  .user-profile
+    .user-profile__header
+      img.avatar(src=user.avatarUrl)
+```
+
+- 이제 wetube 페이지에서 깃헙 로그인 후 profile 페이지로 이동하면 avatar 이미지가 나와야 한다.
+- 하지만 나오지 않아서 확인해보니 예전에 만든 name, password 정보와 깃헙에서 받아온 로그인 정보가 서로 다른 객체로 mongoDB에 저장되어 있어서 req.user.avatarUrl 이 undefined 로 출력되기 때문이라고 한다.
+- 그래서 githubLoginCallback 함수에서 avatarUrl을 따로 저장해주도록 한다.
+
+```js
+// userController.js
+try {
+    const user = await User.findOne({
+      email
+    });
+    if (user) {
+      user.githubId = id;
+      user.avatarUrl = avatarUrl;   // avatarUrl을 저장했다.
+      user.save();
+      return cb(null, user);
+    }
+```
+- 이제 정상적으로 avatar 이미지가 출력된다.
