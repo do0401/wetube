@@ -3585,4 +3585,72 @@ try {
       return cb(null, user);
     }
 ```
+
 - 이제 정상적으로 avatar 이미지가 출력된다.
+- 그리고 userDetail.pug로 다시 가서 username도 출력하도록 한다.
+
+```pug
+//- userDetail.pug
+block content
+  .user-profile
+    .user-profile__header
+      img.avatar(src=user.avatarUrl)
+      h4.profile__username=user.name
+```
+- 마지막으로 header.pug에서
+
+```pug
+//- header.pug
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            __code skip__
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+else
+          li
+            a(href=`/videos${routes.upload}`) Upload
+          li
+            a(href=routes.me) Profile 
+            //- userDetail(user.id) -> me 로 변경한다.
+          li
+            a(href=routes.logout) Log Out
+```
+- userDetail(user.id) 를 me 로 변경해도 문제가 없는 이유는, 위 userDetail.pug 에서 user.avatarUrl을 가지고 왔었고 우리의 middlewares 에서는 locals 변수인 user에 req.user를 할당했기 때문이다.
+- 또한 그렇기 때문에 주소의 id를 바꿔봐도 (현재 로그인 한) 똑같은 사용자가 프로필 화면에 뜬다. 이것은 userDetail이 제 역할을 하지 못하는 것이다. id에 맞는 사용자를 찾아서 그에 대한 프로필을 보여줘야 한다.
+- 나중에는 userDetail에서 (실제 로그인 사용자를 id로 찾아서) override 해야 한다. 지금은 아무 id나 입력해도 현재 로그인한 사용자가 나오며, 이는 middleware 때문이다.
+- 일단은 id로 사용자를 찾고 존재하지 않으면 존재하지 않는다고 띄울 것이다.
+- routes.me로 바꾸고 Profile을 누르면 이제 /me로 이동하게 된다.
+
+- middlewares 를 조금 변경하도록 하자.
+
+```js
+// middlewares.js
+export const localMiddleware = (req, res, next) => {
+  res.locals.siteName = "WeTube";
+  res.locals.routes = routes;
+  res.locals.loggedUser = req.user || null; // user -> loggedUser 로 변경
+  next();
+};
+
+// header.js
+.header__column
+      ul
+        if !loggedUser  // user -> loggedUser 로 변경
+```
+
+- user를 loggedUser 로 변경했다. 훨씬 명확해졌다.
+- 그리고 me 를 globalRouter에 추가해보자.
+
+```js
+// globalRouter.js
+globalRouter.get(routes.me, getMe);
+
+// userController.js
+export const getMe = (req, res) => {  // 함수 명을 me -> getMe 로 변경
+  res.render("userDetail", {
+    pageTitle: "User Detail",
+    user: req.user
+  });
+};
+```
+
+- wetube 페이지로 가서 /me 로 이동하면 현재 로그인한 내 프로필 페이지가 뜨게 되고, 무작위로 (예를 들어, /users/3232323) id를 입력하면 내 프로필 페이지가 뜨지 않고 에러 페이지가 뜨게 된다.
+- 왜냐하면 이제 user라는 이름의 글로벌 변수는 없기 때문이다.

@@ -8,7 +8,8 @@ import {
   postLogin,
   logout,
   githubLogin,
-  postGithubLogIn
+  postGithubLogIn,
+  getMe
 } from "../controllers/userController"
 import {
   home,
@@ -40,5 +41,7 @@ globalRouter.get(
   }),
   postGithubLogIn
 );
+
+globalRouter.get(routes.me, getMe);
 
 export default globalRouter;
