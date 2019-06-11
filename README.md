@@ -3654,3 +3654,30 @@ export const getMe = (req, res) => {  // 함수 명을 me -> getMe 로 변경
 
 - wetube 페이지로 가서 /me 로 이동하면 현재 로그인한 내 프로필 페이지가 뜨게 되고, 무작위로 (예를 들어, /users/3232323) id를 입력하면 내 프로필 페이지가 뜨지 않고 에러 페이지가 뜨게 된다.
 - 왜냐하면 이제 user라는 이름의 글로벌 변수는 없기 때문이다.
+
+## `24일차`
+
+### #6.10 User Detail + Facebook Login Part One
+
+- 페이스북 로그인 작업을 하기 전에 임의의 사용자 id로 들어갔을 때(/users/무작위) 에러 화면이 뜨는 것을 수정해보자.
+- userController.js 에서 userDetail 함수를 수정한다.
+
+```js
+export const userDetail = async (req, res) => {
+  const {
+    params: { id }    // req에서 id를 받아온다.
+  } = req;
+  try {
+    const user = await User.findById(id);   // 사용자를 id로 찾는다.
+    res.render("userDetail", {
+      pageTitle: "User Detail",
+      user
+    });
+  } catch (error) {
+    res.redirect(routes.home);    // error 가 발생하면 home 으로 redirect 시킨다.
+  }
+};
+```
+
+- req에서 id를 받아올 수 있는 이유는 routes에서 :id라고 썼었기 때문이다.
+- 받아온 id로 user를 찾아서 userDetail에 user를 넘겨주고 render를 한다.
