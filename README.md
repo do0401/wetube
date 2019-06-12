@@ -3681,3 +3681,30 @@ export const userDetail = async (req, res) => {
 
 - req에서 id를 받아올 수 있는 이유는 routes에서 :id라고 썼었기 때문이다.
 - 받아온 id로 user를 찾아서 userDetail에 user를 넘겨주고 render를 한다.
+
+- 이제 페이스북 인증 기능을 구현해보자. 페이스북 인증은 조금 어렵다.
+- 먼저 passport의 페이스북 strategy인 passport-facebook을 설치한다.
+
+`npm install passport-facebook`
+
+- 그리고 developers.facebook.com 으로 가서 애플리케이션을 등록해야 한다.
+- 앱 등록을 하고 Facebook Login 설정을 클릭하면 iOS / Android / 웹 / 기타 아이콘이 보이며, 웹을 선택하고 우리 사이트의 URL(http://localhost:4000)을 입력한다. 저장을 누르고 설정으로 이동한다.
+- 기본 설정에서 앱 ID와 앱 시크릿 코드를 복사해서 .env 파일에 넣어준다.
+
+```env
+FB_ID=애플리케이션 ID 정보
+FB_SECRET=애플리케이션 secret 정보
+```
+
+- 이제 passport로 페이스북 인증 방식을 사용하면 된다. 깃헙 작업과 거의 동일하다.
+
+```js
+// passport.js
+import FacebookStrategy from "passport-facebook";
+
+passport.use(new FacebookStrategy({
+  clientID: process.env.FB_ID,
+  clientSecret: process.env.FB_SECRET,
+  callbackURL: "http://localhost:4000/auth/facebook/callback"
+}));
+```
