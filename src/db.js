@@ -5,8 +5,8 @@ dotenv.config();
 
 console.log(process.env.PRODUCTION);
 mongoose.connect(
-  // process.env.PRODUCTION === "true" ? process.env.MONGO_PROD : process.env.MONGO_URL, {
-  process.env.MONGO_PROD, {
+  // process.env.PRODUCTION === "true" ? process.env.MONGO_URL_PROD : process.env.MONGO_URL, {
+  process.env.MONGO_URL_PROD, {
     useNewUrlParser: true,
     useFindAndModify: false
   }
