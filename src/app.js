@@ -9,9 +9,7 @@ import session from "express-session";
 import path from "path";
 import flash from "express-flash";
 import MongoStore from "connect-mongo";
-import {
-  localMiddleware
-} from "./middlewares";
+import { localMiddleware } from "./middlewares";
 import routes from "./routes";
 import userRouter from "./routers/userRouter";
 import videoRouter from "./routers/videoRouter";
@@ -30,9 +28,11 @@ app.set("views", path.join(__dirname, "views"));
 app.use("/static", express.static(path.join(__dirname, "static")));
 app.use(cookieParser());
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({
-  extended: true
-}));
+app.use(
+  bodyParser.urlencoded({
+    extended: true
+  })
+);
 app.use(morgan("dev"));
 app.use(
   session({
