@@ -39,7 +39,7 @@ var uploadAvatar = multerAvatar.single("avatar");
 exports.uploadAvatar = uploadAvatar;
 
 var localMiddleware = function localMiddleware(req, res, next) {
-  res.locals.siteName = "WeTube";
+  res.locals.siteName = "Kiyoon-Tube";
   res.locals.routes = _routes.default;
   res.locals.loggedUser = req.user || null;
   next();

@@ -42,47 +42,48 @@ function () {
             _req$body = req.body, name = _req$body.name, email = _req$body.email, password = _req$body.password, password2 = _req$body.password2;
 
             if (!(password !== password2)) {
-              _context.next = 6;
+              _context.next = 7;
               break;
             }
 
+            req.flash("error", "비밀번호가 일치하지 않습니다.");
             res.status(400);
             res.render("join", {
               pageTitle: "Join"
             });
-            _context.next = 19;
+            _context.next = 20;
             break;
 
-          case 6:
-            _context.prev = 6;
-            _context.next = 9;
+          case 7:
+            _context.prev = 7;
+            _context.next = 10;
             return (0, _User.default)({
               name: name,
               email: email
             });
 
-          case 9:
+          case 10:
             user = _context.sent;
-            _context.next = 12;
+            _context.next = 13;
             return _User.default.register(user, password);
 
-          case 12:
+          case 13:
             next();
-            _context.next = 19;
+            _context.next = 20;
             break;
 
-          case 15:
-            _context.prev = 15;
-            _context.t0 = _context["catch"](6);
+          case 16:
+            _context.prev = 16;
+            _context.t0 = _context["catch"](7);
             console.log(_context.t0);
             res.redirect(_routes.default.home);
 
-          case 19:
+          case 20:
           case "end":
             return _context.stop();
         }
       }
-    }, _callee, this, [[6, 15]]);
+    }, _callee, this, [[7, 16]]);
   }));
 
   return function postJoin(_x, _x2, _x3) {
@@ -102,12 +103,17 @@ exports.getLogin = getLogin;
 
 var postLogin = _passport.default.authenticate('local', {
   failureRedirect: _routes.default.login,
-  successRedirect: _routes.default.home
+  successRedirect: _routes.default.home,
+  successFlash: "환영합니다.",
+  failureFlash: "로그인할 수 없습니다. 이메일 또는 비밀번호를 확인해주세요."
 });
 
 exports.postLogin = postLogin;
 
-var githubLogin = _passport.default.authenticate("github");
+var githubLogin = _passport.default.authenticate("github", {
+  successFlash: "환영합니다.",
+  failureFlash: "지금은 로그인 할 수 없습니다."
+});
 
 exports.githubLogin = githubLogin;
 
@@ -182,7 +188,10 @@ var postGithubLogIn = function postGithubLogIn(req, res) {
 
 exports.postGithubLogIn = postGithubLogIn;
 
-var facebookLogin = _passport.default.authenticate("facebook");
+var facebookLogin = _passport.default.authenticate("facebook", {
+  successFlash: "환영합니다.",
+  failureFlash: "지금은 로그인 할 수 없습니다."
+});
 
 exports.facebookLogin = facebookLogin;
 
@@ -258,6 +267,7 @@ var postFacebookLogin = function postFacebookLogin(req, res) {
 exports.postFacebookLogin = postFacebookLogin;
 
 var logout = function logout(req, res) {
+  req.flash("info", "로그아웃되었습니다.");
   req.logout();
   res.redirect(_routes.default.home);
 };
@@ -296,15 +306,16 @@ function () {
               pageTitle: "User Detail",
               user: user
             });
-            _context4.next = 12;
+            _context4.next = 13;
             break;
 
           case 9:
             _context4.prev = 9;
             _context4.t0 = _context4["catch"](1);
+            req.flash("error", "사용자를 찾을 수 없습니다.");
             res.redirect(_routes.default.home);
 
-          case 12:
+          case 13:
           case "end":
             return _context4.stop();
         }
@@ -349,21 +360,23 @@ function () {
             });
 
           case 4:
+            req.flash("success", "프로필이 업데이트되었습니다.");
             res.redirect(_routes.default.me);
-            _context5.next = 10;
+            _context5.next = 12;
             break;
 
-          case 7:
-            _context5.prev = 7;
+          case 8:
+            _context5.prev = 8;
             _context5.t0 = _context5["catch"](1);
+            req.flash("error", "프로필을 업데이트 할 수 없습니다.");
             res.redirect(_routes.default.editProfile);
 
-          case 10:
+          case 12:
           case "end":
             return _context5.stop();
         }
       }
-    }, _callee5, this, [[1, 7]]);
+    }, _callee5, this, [[1, 8]]);
   }));
 
   return function postEditProfile(_x14, _x15) {
@@ -397,35 +410,37 @@ function () {
             _context6.prev = 1;
 
             if (!(newPassword !== newPassword1)) {
-              _context6.next = 6;
+              _context6.next = 7;
               break;
             }
 
+            req.flash("error", "비밀번호가 일치하지 않습니다.");
             res.status(400);
             res.redirect("/users/".concat(_routes.default.changePassword));
             return _context6.abrupt("return");
 
-          case 6:
-            _context6.next = 8;
+          case 7:
+            _context6.next = 9;
             return req.user.changePassword(oldPassword, newPassword);
 
-          case 8:
+          case 9:
             res.redirect(_routes.default.me);
-            _context6.next = 15;
+            _context6.next = 17;
             break;
 
-          case 11:
-            _context6.prev = 11;
+          case 12:
+            _context6.prev = 12;
             _context6.t0 = _context6["catch"](1);
+            req.flash("error", "비밀번호를 변경할 수 없습니다.");
             res.status(400);
             res.redirect("/users/".concat(_routes.default.changePassword));
 
-          case 15:
+          case 17:
           case "end":
             return _context6.stop();
         }
       }
-    }, _callee6, this, [[1, 11]]);
+    }, _callee6, this, [[1, 12]]);
   }));
 
   return function postChangePassword(_x16, _x17) {

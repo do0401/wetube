@@ -241,7 +241,7 @@ function () {
           case 4:
             video = _context5.sent;
 
-            if (!(video.creator !== req.user.id)) {
+            if (!(String(video.creator) !== req.user.id)) {
               _context5.next = 9;
               break;
             }
@@ -255,15 +255,14 @@ function () {
             });
 
           case 10:
-            _context5.next = 15;
+            _context5.next = 14;
             break;
 
           case 12:
             _context5.prev = 12;
             _context5.t0 = _context5["catch"](1);
-            res.redirect(_routes.default.home);
 
-          case 15:
+          case 14:
           case "end":
             return _context5.stop();
         }

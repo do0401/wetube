@@ -1,5 +1,7 @@
 "use strict";
 
+require("@babel/polyfill");
+
 require("./db");
 
 var _dotenv = _interopRequireDefault(require("dotenv"));
