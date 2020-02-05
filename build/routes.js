@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
+exports["default"] = void 0;
 // Global
 var HOME = "/";
 var JOIN = "/join";
@@ -83,4 +83,4 @@ var routes = {
   deleteComment: DELETE_COMMENT
 };
 var _default = routes;
-exports.default = _default;
+exports["default"] = _default;

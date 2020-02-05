@@ -13,21 +13,21 @@ var _awsSdk = _interopRequireDefault(require("aws-sdk"));
 
 var _routes = _interopRequireDefault(require("./routes"));
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var s3 = new _awsSdk.default.S3({
+var s3 = new _awsSdk["default"].S3({
   accessKeyId: process.env.AWS_KEY,
   secretAccessKey: process.env.AWS_PRIVATE_KEY
 });
-var multerVideo = (0, _multer.default)({
-  storage: (0, _multerS.default)({
+var multerVideo = (0, _multer["default"])({
+  storage: (0, _multerS["default"])({
     s3: s3,
     acl: "public-read",
     bucket: "kiyoon-tube/video"
   })
 });
-var multerAvatar = (0, _multer.default)({
-  storage: (0, _multerS.default)({
+var multerAvatar = (0, _multer["default"])({
+  storage: (0, _multerS["default"])({
     s3: s3,
     acl: "public-read",
     bucket: "kiyoon-tube/avatar"
@@ -40,7 +40,7 @@ exports.uploadAvatar = uploadAvatar;
 
 var localMiddleware = function localMiddleware(req, res, next) {
   res.locals.siteName = "Kiyoon-Tube";
-  res.locals.routes = _routes.default;
+  res.locals.routes = _routes["default"];
   res.locals.loggedUser = req.user || null;
   next();
 };
@@ -49,7 +49,7 @@ exports.localMiddleware = localMiddleware;
 
 var onlyPublic = function onlyPublic(req, res, next) {
   if (req.user) {
-    res.redirect(_routes.default.home);
+    res.redirect(_routes["default"].home);
   } else {
     next();
   }
@@ -61,7 +61,7 @@ var onlyPrivate = function onlyPrivate(req, res, next) {
   if (req.user) {
     next();
   } else {
-    res.redirect(_routes.default.home);
+    res.redirect(_routes["default"].home);
   }
 };
 

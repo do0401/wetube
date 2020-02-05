@@ -13,7 +13,7 @@ var _User = _interopRequireDefault(require("../models/User"));
 
 var _constants = require("constants");
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
@@ -57,7 +57,7 @@ function () {
           case 7:
             _context.prev = 7;
             _context.next = 10;
-            return (0, _User.default)({
+            return (0, _User["default"])({
               name: name,
               email: email
             });
@@ -65,7 +65,7 @@ function () {
           case 10:
             user = _context.sent;
             _context.next = 13;
-            return _User.default.register(user, password);
+            return _User["default"].register(user, password);
 
           case 13:
             next();
@@ -76,14 +76,14 @@ function () {
             _context.prev = 16;
             _context.t0 = _context["catch"](7);
             console.log(_context.t0);
-            res.redirect(_routes.default.home);
+            res.redirect(_routes["default"].home);
 
           case 20:
           case "end":
             return _context.stop();
         }
       }
-    }, _callee, this, [[7, 16]]);
+    }, _callee, null, [[7, 16]]);
   }));
 
   return function postJoin(_x, _x2, _x3) {
@@ -101,16 +101,16 @@ var getLogin = function getLogin(req, res) {
 
 exports.getLogin = getLogin;
 
-var postLogin = _passport.default.authenticate('local', {
-  failureRedirect: _routes.default.login,
-  successRedirect: _routes.default.home,
+var postLogin = _passport["default"].authenticate('local', {
+  failureRedirect: _routes["default"].login,
+  successRedirect: _routes["default"].home,
   successFlash: "환영합니다.",
   failureFlash: "로그인할 수 없습니다. 이메일 또는 비밀번호를 확인해주세요."
 });
 
 exports.postLogin = postLogin;
 
-var githubLogin = _passport.default.authenticate("github", {
+var githubLogin = _passport["default"].authenticate("github", {
   successFlash: "환영합니다.",
   failureFlash: "지금은 로그인 할 수 없습니다."
 });
@@ -132,7 +132,7 @@ function () {
             _profile$_json = profile._json, id = _profile$_json.id, avatarUrl = _profile$_json.avatar_url, name = _profile$_json.name, email = _profile$_json.email;
             _context2.prev = 1;
             _context2.next = 4;
-            return _User.default.findOne({
+            return _User["default"].findOne({
               email: email
             });
 
@@ -151,7 +151,7 @@ function () {
 
           case 10:
             _context2.next = 12;
-            return _User.default.create({
+            return _User["default"].create({
               email: email,
               name: name,
               githubId: id,
@@ -172,7 +172,7 @@ function () {
             return _context2.stop();
         }
       }
-    }, _callee2, this, [[1, 16]]);
+    }, _callee2, null, [[1, 16]]);
   }));
 
   return function githubLoginCallback(_x4, _x5, _x6, _x7) {
@@ -183,12 +183,12 @@ function () {
 exports.githubLoginCallback = githubLoginCallback;
 
 var postGithubLogIn = function postGithubLogIn(req, res) {
-  res.redirect(_routes.default.home);
+  res.redirect(_routes["default"].home);
 };
 
 exports.postGithubLogIn = postGithubLogIn;
 
-var facebookLogin = _passport.default.authenticate("facebook", {
+var facebookLogin = _passport["default"].authenticate("facebook", {
   successFlash: "환영합니다.",
   failureFlash: "지금은 로그인 할 수 없습니다."
 });
@@ -210,7 +210,7 @@ function () {
             _profile$_json2 = profile._json, id = _profile$_json2.id, name = _profile$_json2.name, email = _profile$_json2.email;
             _context3.prev = 1;
             _context3.next = 4;
-            return _User.default.findOne({
+            return _User["default"].findOne({
               email: email
             });
 
@@ -229,7 +229,7 @@ function () {
 
           case 10:
             _context3.next = 12;
-            return _User.default.create({
+            return _User["default"].create({
               email: email,
               name: name,
               facebookId: id,
@@ -250,7 +250,7 @@ function () {
             return _context3.stop();
         }
       }
-    }, _callee3, this, [[1, 16]]);
+    }, _callee3, null, [[1, 16]]);
   }));
 
   return function facebookLoginCallback(_x8, _x9, _x10, _x11) {
@@ -261,7 +261,7 @@ function () {
 exports.facebookLoginCallback = facebookLoginCallback;
 
 var postFacebookLogin = function postFacebookLogin(req, res) {
-  res.redirect(_routes.default.home);
+  res.redirect(_routes["default"].home);
 };
 
 exports.postFacebookLogin = postFacebookLogin;
@@ -269,7 +269,7 @@ exports.postFacebookLogin = postFacebookLogin;
 var logout = function logout(req, res) {
   req.flash("info", "로그아웃되었습니다.");
   req.logout();
-  res.redirect(_routes.default.home);
+  res.redirect(_routes["default"].home);
 };
 
 exports.logout = logout;
@@ -297,7 +297,7 @@ function () {
             id = req.params.id;
             _context4.prev = 1;
             _context4.next = 4;
-            return _User.default.findById(id).populate("videos");
+            return _User["default"].findById(id).populate("videos");
 
           case 4:
             user = _context4.sent;
@@ -313,14 +313,14 @@ function () {
             _context4.prev = 9;
             _context4.t0 = _context4["catch"](1);
             req.flash("error", "사용자를 찾을 수 없습니다.");
-            res.redirect(_routes.default.home);
+            res.redirect(_routes["default"].home);
 
           case 13:
           case "end":
             return _context4.stop();
         }
       }
-    }, _callee4, this, [[1, 9]]);
+    }, _callee4, null, [[1, 9]]);
   }));
 
   return function userDetail(_x12, _x13) {
@@ -353,7 +353,7 @@ function () {
             _req$body2 = req.body, name = _req$body2.name, email = _req$body2.email, file = req.file;
             _context5.prev = 1;
             _context5.next = 4;
-            return _User.default.findByIdAndUpdate(req.user.id, {
+            return _User["default"].findByIdAndUpdate(req.user.id, {
               name: name,
               email: email,
               avatarUrl: file ? file.location : req.user.avatarUrl
@@ -361,7 +361,7 @@ function () {
 
           case 4:
             req.flash("success", "프로필이 업데이트되었습니다.");
-            res.redirect(_routes.default.me);
+            res.redirect(_routes["default"].me);
             _context5.next = 12;
             break;
 
@@ -369,14 +369,14 @@ function () {
             _context5.prev = 8;
             _context5.t0 = _context5["catch"](1);
             req.flash("error", "프로필을 업데이트 할 수 없습니다.");
-            res.redirect(_routes.default.editProfile);
+            res.redirect(_routes["default"].editProfile);
 
           case 12:
           case "end":
             return _context5.stop();
         }
       }
-    }, _callee5, this, [[1, 8]]);
+    }, _callee5, null, [[1, 8]]);
   }));
 
   return function postEditProfile(_x14, _x15) {
@@ -416,7 +416,7 @@ function () {
 
             req.flash("error", "비밀번호가 일치하지 않습니다.");
             res.status(400);
-            res.redirect("/users/".concat(_routes.default.changePassword));
+            res.redirect("/users/".concat(_routes["default"].changePassword));
             return _context6.abrupt("return");
 
           case 7:
@@ -424,7 +424,7 @@ function () {
             return req.user.changePassword(oldPassword, newPassword);
 
           case 9:
-            res.redirect(_routes.default.me);
+            res.redirect(_routes["default"].me);
             _context6.next = 17;
             break;
 
@@ -433,14 +433,14 @@ function () {
             _context6.t0 = _context6["catch"](1);
             req.flash("error", "비밀번호를 변경할 수 없습니다.");
             res.status(400);
-            res.redirect("/users/".concat(_routes.default.changePassword));
+            res.redirect("/users/".concat(_routes["default"].changePassword));
 
           case 17:
           case "end":
             return _context6.stop();
         }
       }
-    }, _callee6, this, [[1, 12]]);
+    }, _callee6, null, [[1, 12]]);
   }));
 
   return function postChangePassword(_x16, _x17) {

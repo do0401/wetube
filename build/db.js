@@ -4,16 +4,16 @@ var _mongoose = _interopRequireDefault(require("mongoose"));
 
 var _dotenv = _interopRequireDefault(require("dotenv"));
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-_dotenv.default.config();
+_dotenv["default"].config();
 
-_mongoose.default.connect(process.env.PRODUCTION ? process.env.MONGO_URL_PROD : process.env.MONGO_URL, {
+_mongoose["default"].connect(process.env.PRODUCTION ? process.env.MONGO_URL_PROD : process.env.MONGO_URL, {
   useNewUrlParser: true,
   useFindAndModify: false
 });
 
-var db = _mongoose.default.connection;
+var db = _mongoose["default"].connection;
 
 var handleOpen = function handleOpen() {
   return console.log("\u2705 Connected to DB");

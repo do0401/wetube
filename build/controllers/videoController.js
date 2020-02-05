@@ -11,7 +11,7 @@ var _Video = _interopRequireDefault(require("../models/Video"));
 
 var _Comment = _interopRequireDefault(require("../models/Comment"));
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
@@ -31,7 +31,7 @@ function () {
           case 0:
             _context.prev = 0;
             _context.next = 3;
-            return _Video.default.find({}).sort({
+            return _Video["default"].find({}).sort({
               _id: -1
             });
 
@@ -58,7 +58,7 @@ function () {
             return _context.stop();
         }
       }
-    }, _callee, this, [[0, 7]]);
+    }, _callee, null, [[0, 7]]);
   }));
 
   return function home(_x, _x2) {
@@ -85,7 +85,7 @@ function () {
             videos = [];
             _context2.prev = 2;
             _context2.next = 5;
-            return _Video.default.find({
+            return _Video["default"].find({
               title: {
                 $regex: searchingBy,
                 $options: "i"
@@ -114,7 +114,7 @@ function () {
             return _context2.stop();
         }
       }
-    }, _callee2, this, [[2, 8]]);
+    }, _callee2, null, [[2, 8]]);
   }));
 
   return function search(_x3, _x4) {
@@ -147,7 +147,7 @@ function () {
           case 0:
             _req$body = req.body, title = _req$body.title, description = _req$body.description, location = req.file.location;
             _context3.next = 3;
-            return _Video.default.create({
+            return _Video["default"].create({
               fileUrl: location,
               title: title,
               description: description,
@@ -158,14 +158,14 @@ function () {
             newVideo = _context3.sent;
             req.user.videos.push(newVideo._id);
             req.user.save();
-            res.redirect(_routes.default.videoDetail(newVideo.id));
+            res.redirect(_routes["default"].videoDetail(newVideo.id));
 
           case 7:
           case "end":
             return _context3.stop();
         }
       }
-    }, _callee3, this);
+    }, _callee3);
   }));
 
   return function postUpload(_x5, _x6) {
@@ -190,7 +190,7 @@ function () {
             id = req.params.id;
             _context4.prev = 1;
             _context4.next = 4;
-            return _Video.default.findById(id).populate("creator").populate("comments");
+            return _Video["default"].findById(id).populate("creator").populate("comments");
 
           case 4:
             video = _context4.sent;
@@ -204,14 +204,14 @@ function () {
           case 8:
             _context4.prev = 8;
             _context4.t0 = _context4["catch"](1);
-            res.redirect(_routes.default.home);
+            res.redirect(_routes["default"].home);
 
           case 11:
           case "end":
             return _context4.stop();
         }
       }
-    }, _callee4, this, [[1, 8]]);
+    }, _callee4, null, [[1, 8]]);
   }));
 
   return function videoDetail(_x7, _x8) {
@@ -236,7 +236,7 @@ function () {
             id = req.params.id;
             _context5.prev = 1;
             _context5.next = 4;
-            return _Video.default.findById(id);
+            return _Video["default"].findById(id);
 
           case 4:
             video = _context5.sent;
@@ -267,7 +267,7 @@ function () {
             return _context5.stop();
         }
       }
-    }, _callee5, this, [[1, 12]]);
+    }, _callee5, null, [[1, 12]]);
   }));
 
   return function getEditVideo(_x9, _x10) {
@@ -292,7 +292,7 @@ function () {
             id = req.params.id, _req$body2 = req.body, title = _req$body2.title, description = _req$body2.description;
             _context6.prev = 1;
             _context6.next = 4;
-            return _Video.default.findOneAndUpdate({
+            return _Video["default"].findOneAndUpdate({
               _id: id
             }, {
               title: title,
@@ -300,21 +300,21 @@ function () {
             });
 
           case 4:
-            res.redirect(_routes.default.videoDetail(id));
+            res.redirect(_routes["default"].videoDetail(id));
             _context6.next = 10;
             break;
 
           case 7:
             _context6.prev = 7;
             _context6.t0 = _context6["catch"](1);
-            res.redirect(_routes.default.home);
+            res.redirect(_routes["default"].home);
 
           case 10:
           case "end":
             return _context6.stop();
         }
       }
-    }, _callee6, this, [[1, 7]]);
+    }, _callee6, null, [[1, 7]]);
   }));
 
   return function postEditVideo(_x11, _x12) {
@@ -339,7 +339,7 @@ function () {
             id = req.params.id;
             _context7.prev = 1;
             _context7.next = 4;
-            return _Video.default.findById(id);
+            return _Video["default"].findById(id);
 
           case 4:
             video = _context7.sent;
@@ -353,7 +353,7 @@ function () {
 
           case 9:
             _context7.next = 11;
-            return _Video.default.findOneAndRemove({
+            return _Video["default"].findOneAndRemove({
               _id: id
             });
 
@@ -367,14 +367,14 @@ function () {
             console.log(_context7.t0);
 
           case 16:
-            res.redirect(_routes.default.home);
+            res.redirect(_routes["default"].home);
 
           case 17:
           case "end":
             return _context7.stop();
         }
       }
-    }, _callee7, this, [[1, 13]]);
+    }, _callee7, null, [[1, 13]]);
   }));
 
   return function deleteVideo(_x13, _x14) {
@@ -399,7 +399,7 @@ function () {
             id = req.params.id;
             _context8.prev = 1;
             _context8.next = 4;
-            return _Video.default.findById(id);
+            return _Video["default"].findById(id);
 
           case 4:
             video = _context8.sent;
@@ -424,7 +424,7 @@ function () {
             return _context8.stop();
         }
       }
-    }, _callee8, this, [[1, 10, 13, 16]]);
+    }, _callee8, null, [[1, 10, 13, 16]]);
   }));
 
   return function postRegisterView(_x15, _x16) {
@@ -449,12 +449,12 @@ function () {
             id = req.params.id, comment = req.body.comment, user = req.user;
             _context9.prev = 1;
             _context9.next = 4;
-            return _Video.default.findById(id);
+            return _Video["default"].findById(id);
 
           case 4:
             video = _context9.sent;
             _context9.next = 7;
-            return _Comment.default.create({
+            return _Comment["default"].create({
               text: comment,
               creator: user.id
             });
@@ -481,7 +481,7 @@ function () {
             return _context9.stop();
         }
       }
-    }, _callee9, this, [[1, 12, 15, 18]]);
+    }, _callee9, null, [[1, 12, 15, 18]]);
   }));
 
   return function postAddComment(_x17, _x18) {
@@ -506,12 +506,12 @@ function () {
             id = req.params.id, comment = req.body.comment;
             _context10.prev = 1;
             _context10.next = 4;
-            return _Video.default.findById(id);
+            return _Video["default"].findById(id);
 
           case 4:
             video = _context10.sent;
             _context10.next = 7;
-            return _Comment.default.findOneAndDelete({
+            return _Comment["default"].findOneAndDelete({
               text: "".concat(comment)
             });
 
@@ -537,7 +537,7 @@ function () {
             return _context10.stop();
         }
       }
-    }, _callee10, this, [[1, 12, 15, 18]]);
+    }, _callee10, null, [[1, 12, 15, 18]]);
   }));
 
   return function postDeleteComment(_x19, _x20) {
